@@ -26,9 +26,9 @@ import com.gh4a.R;
 import com.gh4a.fragment.StargazerListFragment;
 import com.gh4a.fragment.WatcherListFragment;
 
-public class WatcherListActivity extends FragmentContainerActivity {
+public class StargazerListActivity extends FragmentContainerActivity {
     public static Intent makeIntent(Context context, String repoOwner, String repoName) {
-        return new Intent(context, WatcherListActivity.class)
+        return new Intent(context, StargazerListActivity.class)
                 .putExtra("owner", repoOwner)
                 .putExtra("repo", repoName);
     }
@@ -41,7 +41,7 @@ public class WatcherListActivity extends FragmentContainerActivity {
         super.onCreate(savedInstanceState);
 
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle(R.string.repo_watchers);
+        actionBar.setTitle(R.string.repo_stargazers);
         actionBar.setSubtitle(mRepoOwner + "/" + mRepoName);
         actionBar.setDisplayHomeAsUpEnabled(true);
     }
@@ -55,6 +55,6 @@ public class WatcherListActivity extends FragmentContainerActivity {
 
     @Override
     protected Fragment onCreateFragment() {
-        return WatcherListFragment.newInstance(mRepoOwner, mRepoName);
+        return StargazerListFragment.newInstance(mRepoOwner, mRepoName);
     }
 }

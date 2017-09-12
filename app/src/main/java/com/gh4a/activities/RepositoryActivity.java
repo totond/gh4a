@@ -592,6 +592,9 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
                 return;
             }
             mIsWatching = !mIsWatching;
+            if (mRepositoryFragment != null) {
+                mRepositoryFragment.updateWatcherCount(mIsWatching);
+            }
             supportInvalidateOptionsMenu();
         }
     }

@@ -50,7 +50,9 @@ public class Repository implements IRepositoryIdProvider, Serializable {
 
 	private int size;
 
-	private int watchers;
+	private int subscribersCount;
+
+	private int stargazersCount;
 
 	private Repository parent;
 
@@ -245,10 +247,26 @@ public class Repository implements IRepositoryIdProvider, Serializable {
 	}
 
 	/**
+	 * @return stargazers
+	 */
+	public int getStargazers() {
+		return stargazersCount;
+	}
+
+	/**
+	 * @param stargazers
+	 * @return this repository
+	 */
+	public Repository setStargazers(int stargazers) {
+		this.stargazersCount = stargazers;
+		return this;
+	}
+
+	/**
 	 * @return watchers
 	 */
 	public int getWatchers() {
-		return watchers;
+		return subscribersCount;
 	}
 
 	/**
@@ -256,7 +274,7 @@ public class Repository implements IRepositoryIdProvider, Serializable {
 	 * @return this repository
 	 */
 	public Repository setWatchers(int watchers) {
-		this.watchers = watchers;
+		this.subscribersCount = watchers;
 		return this;
 	}
 

@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
@@ -37,6 +38,7 @@ import com.gh4a.activities.ForkListActivity;
 import com.gh4a.activities.IssueListActivity;
 import com.gh4a.activities.ReleaseListActivity;
 import com.gh4a.activities.RepositoryActivity;
+import com.gh4a.activities.StargazerListActivity;
 import com.gh4a.activities.UserActivity;
 import com.gh4a.activities.WatcherListActivity;
 import com.gh4a.activities.WikiListActivity;
@@ -49,6 +51,7 @@ import com.gh4a.utils.HttpImageGetter;
 import com.gh4a.utils.StringUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.IntentSpan;
+import com.gh4a.widget.OverviewRow;
 import com.vdurmont.emoji.EmojiParser;
 
 import org.eclipse.egit.github.core.Permissions;
@@ -104,14 +107,13 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
         @Override
         protected void onResultReady(Integer result) {
             View v = getView();
-            v.findViewById(R.id.issues_progress).setVisibility(View.GONE);
-            v.findViewById(R.id.pull_requests_progress).setVisibility(View.GONE);
 
-            TextView tvIssuesCount = mContentView.findViewById(R.id.tv_issues_count);
-            tvIssuesCount.setText(String.valueOf(mRepository.getOpenIssues() - result));
+            OverviewRow issuesRow = mContentView.findViewById(R.id.issues_row);
+            int issueCount = mRepository.getOpenIssues() - result;
+            issuesRow.setText(getResources().getQuantityString(R.plurals.issue, issueCount, issueCount));
 
-            TextView tvPullRequestsCountView = v.findViewById(R.id.tv_pull_requests_count);
-            tvPullRequestsCountView.setText(String.valueOf(result));
+            OverviewRow pullsRow = mContentView.findViewById(R.id.pulls_row);
+            pullsRow.setText(getResources().getQuantityString(R.plurals.pull_request, result, result));
         }
     };
 
@@ -147,7 +149,10 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
             mLoadingView.setVisibility(View.VISIBLE);
         }
         if (mContentView != null) {
-            mContentView.findViewById(R.id.pull_requests_progress).setVisibility(View.VISIBLE);
+            OverviewRow issuesRow = mContentView.findViewById(R.id.issues_row);
+            issuesRow.setText(null);
+            OverviewRow pullsRow = mContentView.findViewById(R.id.pulls_row);
+            pullsRow.setText(null);
         }
         if (mImageGetter != null) {
             mImageGetter.clearHtmlCache();
@@ -238,13 +243,39 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
         }
 
         fillTextView(R.id.tv_desc, 0, mRepository.getDescription());
-        fillTextView(R.id.tv_language,R.string.repo_language, mRepository.getLanguage());
         fillTextView(R.id.tv_url, 0, !StringUtils.isBlank(mRepository.getHomepage())
                 ? mRepository.getHomepage() : mRepository.getHtmlUrl());
 
-        mContentView.findViewById(R.id.cell_stargazers).setOnClickListener(this);
-        mContentView.findViewById(R.id.cell_forks).setOnClickListener(this);
-        mContentView.findViewById(R.id.cell_pull_requests).setOnClickListener(this);
+        final String owner = mRepository.getOwner().getLogin();
+        final String name = mRepository.getName();
+
+        OverviewRow languageRow = mContentView.findViewById(R.id.language_row);
+        languageRow.setVisibility(StringUtils.isBlank(mRepository.getLanguage())
+                ? View.GONE : View.VISIBLE);
+        languageRow.setText(getString(R.string.repo_language, mRepository.getLanguage()));
+
+        OverviewRow issuesRow = mContentView.findViewById(R.id.issues_row);
+        issuesRow.setVisibility(mRepository.isHasIssues() ? View.VISIBLE : View.GONE);
+        issuesRow.setClickIntent(IssueListActivity.makeIntent(getActivity(), owner, name));
+
+        OverviewRow pullsRow = mContentView.findViewById(R.id.pulls_row);
+        pullsRow.setClickIntent(IssueListActivity.makeIntent(getActivity(), owner, name, true));
+
+        OverviewRow forksRow = mContentView.findViewById(R.id.forks_row);
+        forksRow.setText(getResources().getQuantityString(R.plurals.fork,
+                mRepository.getForks(), mRepository.getForks()));
+        forksRow.setClickIntent(ForkListActivity.makeIntent(getActivity(), owner, name));
+
+        OverviewRow starsRow = mContentView.findViewById(R.id.stars_row);
+        starsRow.setText(getResources().getQuantityString(R.plurals.star,
+                mRepository.getStargazers(), mRepository.getStargazers()));
+        starsRow.setClickIntent(StargazerListActivity.makeIntent(getActivity(), owner, name));
+
+        OverviewRow watcherRow = mContentView.findViewById(R.id.watchers_row);
+        watcherRow.setText(getResources().getQuantityString(R.plurals.watcher,
+                mRepository.getWatchers(), mRepository.getWatchers()));
+        watcherRow.setClickIntent(WatcherListActivity.makeIntent(getActivity(), owner, name));
+
         mContentView.findViewById(R.id.tv_contributors_label).setOnClickListener(this);
         mContentView.findViewById(R.id.other_info).setOnClickListener(this);
         mContentView.findViewById(R.id.tv_releases_label).setOnClickListener(this);
@@ -255,22 +286,6 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
                 permissions != null && permissions.hasPushAccess());
         updateClickableLabel(R.id.tv_downloads_label, mRepository.isHasDownloads());
         updateClickableLabel(R.id.tv_wiki_label, mRepository.isHasWiki());
-
-        TextView tvStargazersCount = mContentView.findViewById(R.id.tv_stargazers_count);
-        tvStargazersCount.setText(String.valueOf(mRepository.getWatchers()));
-
-        TextView tvForksCount = mContentView.findViewById(R.id.tv_forks_count);
-        tvForksCount.setText(String.valueOf(mRepository.getForks()));
-
-        LinearLayout llIssues = mContentView.findViewById(R.id.cell_issues);
-
-        if (mRepository.isHasIssues()) {
-            llIssues.setVisibility(View.VISIBLE);
-            llIssues.setOnClickListener(this);
-            // value will be filled when PR count arrives
-        } else {
-            llIssues.setVisibility(View.GONE);
-        }
 
         mContentView.findViewById(R.id.tv_private).setVisibility(
                 mRepository.isPrivate() ? View.VISIBLE : View.GONE);
@@ -304,13 +319,26 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
 
     public void updateStargazerCount(boolean starring) {
         if (starring) {
+            mRepository.setStargazers(mRepository.getStargazers() + 1);
+        } else {
+            mRepository.setStargazers(mRepository.getStargazers() - 1);
+        }
+
+        OverviewRow starsRow = mContentView.findViewById(R.id.stars_row);
+        starsRow.setText(getResources().getQuantityString(R.plurals.star,
+                mRepository.getStargazers(), mRepository.getStargazers()));
+    }
+
+    public void updateWatcherCount(boolean watching) {
+        if (watching) {
             mRepository.setWatchers(mRepository.getWatchers() + 1);
         } else {
             mRepository.setWatchers(mRepository.getWatchers() - 1);
         }
 
-        TextView tvStargazersCount = mContentView.findViewById(R.id.tv_stargazers_count);
-        tvStargazersCount.setText(String.valueOf(mRepository.getWatchers()));
+        OverviewRow watchersRow = mContentView.findViewById(R.id.watchers_row);
+        watchersRow.setText(getResources().getQuantityString(R.plurals.watcher,
+                mRepository.getWatchers(), mRepository.getWatchers()));
     }
 
     @Override
@@ -326,18 +354,10 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
         String name = mRepository.getName();
         Intent intent = null;
 
-        if (id == R.id.cell_pull_requests) {
-            intent = IssueListActivity.makeIntent(getActivity(), owner, name, true);
-        } else if (id == R.id.tv_contributors_label) {
+        if (id == R.id.tv_contributors_label) {
             intent = ContributorListActivity.makeIntent(getActivity(), owner, name);
         } else if (id == R.id.tv_collaborators_label) {
             intent = CollaboratorListActivity.makeIntent(getActivity(), owner, name);
-        } else if (id == R.id.cell_issues) {
-            intent = IssueListActivity.makeIntent(getActivity(), owner, name);
-        } else if (id == R.id.cell_stargazers) {
-            intent = WatcherListActivity.makeIntent(getActivity(), owner, name);
-        } else if (id == R.id.cell_forks) {
-            intent = ForkListActivity.makeIntent(getActivity(), owner, name);
         } else if (id == R.id.tv_wiki_label) {
             intent = WikiListActivity.makeIntent(getActivity(), owner, name, null);
         } else if (id == R.id.tv_downloads_label) {
