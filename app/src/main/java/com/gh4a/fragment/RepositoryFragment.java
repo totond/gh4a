@@ -20,16 +20,16 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.gh4a.BackgroundTask;
+import com.gh4a.Gh4Application;
 import com.gh4a.R;
 import com.gh4a.activities.CollaboratorListActivity;
 import com.gh4a.activities.ContributorListActivity;
@@ -42,6 +42,8 @@ import com.gh4a.activities.StargazerListActivity;
 import com.gh4a.activities.UserActivity;
 import com.gh4a.activities.WatcherListActivity;
 import com.gh4a.activities.WikiListActivity;
+import com.gh4a.loader.IsStarringLoader;
+import com.gh4a.loader.IsWatchingLoader;
 import com.gh4a.loader.LoaderCallbacks;
 import com.gh4a.loader.LoaderResult;
 import com.gh4a.loader.PullRequestCountLoader;
@@ -56,8 +58,14 @@ import com.vdurmont.emoji.EmojiParser;
 
 import org.eclipse.egit.github.core.Permissions;
 import org.eclipse.egit.github.core.Repository;
+import org.eclipse.egit.github.core.RepositoryId;
+import org.eclipse.egit.github.core.service.StarService;
+import org.eclipse.egit.github.core.service.WatcherService;
 
-public class RepositoryFragment extends LoadingFragmentBase implements OnClickListener {
+import java.io.IOException;
+
+public class RepositoryFragment extends LoadingFragmentBase implements
+        OverviewRow.OnIconClickListener, View.OnClickListener {
     public static RepositoryFragment newInstance(Repository repository, String ref) {
         RepositoryFragment f = new RepositoryFragment();
 
@@ -71,16 +79,23 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
 
     private static final int ID_LOADER_README = 0;
     private static final int ID_LOADER_PULL_REQUEST_COUNT = 1;
+    private static final int ID_LOADER_WATCHING = 2;
+    private static final int ID_LOADER_STARRING = 3;
+
     private static final String STATE_KEY_IS_README_EXPANDED = "is_readme_expanded";
     private static final String STATE_KEY_IS_README_LOADED = "is_readme_loaded";
 
     private Repository mRepository;
     private View mContentView;
+    private OverviewRow mWatcherRow;
+    private OverviewRow mStarsRow;
     private String mRef;
     private HttpImageGetter mImageGetter;
     private TextView mReadmeView;
     private View mLoadingView;
     private TextView mReadmeTitleView;
+    private Boolean mIsWatching = null;
+    private Boolean mIsStarring = null;
     private boolean mIsReadmeLoaded = false;
     private boolean mIsReadmeExpanded = false;
 
@@ -114,6 +129,33 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
             pullsRow.setText(getResources().getQuantityString(R.plurals.pull_request, result, result));
         }
     };
+
+    private final LoaderCallbacks<Boolean> mWatchCallback = new LoaderCallbacks<Boolean>(this) {
+        @Override
+        protected Loader<LoaderResult<Boolean>> onCreateLoader() {
+            return new IsWatchingLoader(getActivity(),
+                    mRepository.getOwner().getLogin(), mRepository.getName());
+        }
+        @Override
+        protected void onResultReady(Boolean result) {
+            mIsWatching = result;
+            updateWatcherUi();
+        }
+    };
+
+    private final LoaderCallbacks<Boolean> mStarCallback = new LoaderCallbacks<Boolean>(this) {
+        @Override
+        protected Loader<LoaderResult<Boolean>> onCreateLoader() {
+            return new IsStarringLoader(getActivity(),
+                    mRepository.getOwner().getLogin(), mRepository.getName());
+        }
+        @Override
+        protected void onResultReady(Boolean result) {
+            mIsStarring = result;
+            updateStargazerUi();
+        }
+    };
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -152,10 +194,19 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
             OverviewRow pullsRow = mContentView.findViewById(R.id.pulls_row);
             pullsRow.setText(null);
         }
+        if (mIsWatching != null && mWatcherRow != null) {
+            mWatcherRow.setText(null);
+        }
+        mIsWatching = null;
+        if (mIsStarring != null && mStarsRow != null) {
+            mStarsRow.setText(null);
+        }
+        mIsStarring = null;
         if (mImageGetter != null) {
             mImageGetter.clearHtmlCache();
         }
-        hideContentAndRestartLoaders(ID_LOADER_README, ID_LOADER_PULL_REQUEST_COUNT);
+        hideContentAndRestartLoaders(ID_LOADER_README, ID_LOADER_PULL_REQUEST_COUNT,
+                ID_LOADER_WATCHING, ID_LOADER_STARRING);
     }
 
     @Override
@@ -170,10 +221,16 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
             mIsReadmeExpanded = savedInstanceState.getBoolean(STATE_KEY_IS_README_EXPANDED, false);
             mIsReadmeLoaded = savedInstanceState.getBoolean(STATE_KEY_IS_README_LOADED, false);
         }
+
+        LoaderManager lm = getLoaderManager();
         if (mIsReadmeExpanded || mIsReadmeLoaded) {
-            getLoaderManager().initLoader(ID_LOADER_README, null, mReadmeCallback);
+            lm.initLoader(ID_LOADER_README, null, mReadmeCallback);
         }
-        getLoaderManager().initLoader(ID_LOADER_PULL_REQUEST_COUNT, null, mPullRequestsCallback);
+        lm.initLoader(ID_LOADER_PULL_REQUEST_COUNT, null, mPullRequestsCallback);
+        if (Gh4Application.get().isAuthorized()) {
+            lm.initLoader(ID_LOADER_WATCHING, null, mWatchCallback);
+            lm.initLoader(ID_LOADER_STARRING, null, mStarCallback);
+        }
 
         updateReadmeVisibility();
     }
@@ -264,15 +321,18 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
                 mRepository.getForks(), mRepository.getForks()));
         forksRow.setClickIntent(ForkListActivity.makeIntent(getActivity(), owner, name));
 
-        OverviewRow starsRow = mContentView.findViewById(R.id.stars_row);
-        starsRow.setText(getResources().getQuantityString(R.plurals.star,
-                mRepository.getStargazers(), mRepository.getStargazers()));
-        starsRow.setClickIntent(StargazerListActivity.makeIntent(getActivity(), owner, name));
+        mStarsRow = mContentView.findViewById(R.id.stars_row);
+        mStarsRow.setIconClickListener(this);
+        mStarsRow.setClickIntent(StargazerListActivity.makeIntent(getActivity(), owner, name));
 
-        OverviewRow watcherRow = mContentView.findViewById(R.id.watchers_row);
-        watcherRow.setText(getResources().getQuantityString(R.plurals.watcher,
-                mRepository.getWatchers(), mRepository.getWatchers()));
-        watcherRow.setClickIntent(WatcherListActivity.makeIntent(getActivity(), owner, name));
+        mWatcherRow = mContentView.findViewById(R.id.watchers_row);
+        mWatcherRow.setIconClickListener(this);
+        mWatcherRow.setClickIntent(WatcherListActivity.makeIntent(getActivity(), owner, name));
+
+        if (!Gh4Application.get().isAuthorized()) {
+            updateWatcherUi();
+            updateStargazerUi();
+        }
 
         mContentView.findViewById(R.id.tv_contributors_label).setOnClickListener(this);
         mContentView.findViewById(R.id.other_info).setOnClickListener(this);
@@ -315,28 +375,16 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
         }
     }
 
-    public void updateStargazerCount(boolean starring) {
-        if (starring) {
-            mRepository.setStargazers(mRepository.getStargazers() + 1);
-        } else {
-            mRepository.setStargazers(mRepository.getStargazers() - 1);
-        }
-
-        OverviewRow starsRow = mContentView.findViewById(R.id.stars_row);
-        starsRow.setText(getResources().getQuantityString(R.plurals.star,
+    private void updateStargazerUi() {
+        mStarsRow.setText(getResources().getQuantityString(R.plurals.star,
                 mRepository.getStargazers(), mRepository.getStargazers()));
+        mStarsRow.setToggleState(mIsStarring != null && mIsStarring);
     }
 
-    public void updateWatcherCount(boolean watching) {
-        if (watching) {
-            mRepository.setWatchers(mRepository.getWatchers() + 1);
-        } else {
-            mRepository.setWatchers(mRepository.getWatchers() - 1);
-        }
-
-        OverviewRow watchersRow = mContentView.findViewById(R.id.watchers_row);
-        watchersRow.setText(getResources().getQuantityString(R.plurals.watcher,
+    private void updateWatcherUi() {
+        mWatcherRow.setText(getResources().getQuantityString(R.plurals.watcher,
                 mRepository.getWatchers(), mRepository.getWatchers()));
+        mWatcherRow.setToggleState(mIsWatching != null && mIsWatching);
     }
 
     @Override
@@ -368,6 +416,17 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
 
         if (intent != null) {
             startActivity(intent);
+        }
+    }
+
+    @Override
+    public void onIconClick(OverviewRow row) {
+        if (row == mWatcherRow && mIsWatching != null) {
+            mWatcherRow.setText(null);
+            new UpdateWatchTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } else if (row == mStarsRow && mIsStarring != null) {
+            mStarsRow.setText(null);
+            new UpdateStarTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
 
@@ -428,6 +487,77 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
             mReadmeView.setVisibility(mIsReadmeExpanded ? View.VISIBLE : View.GONE);
             mProgressView.setVisibility(View.GONE);
             mIsReadmeLoaded = true;
+        }
+    }
+
+    private class UpdateStarTask extends BackgroundTask<Void> {
+        public UpdateStarTask() {
+            super(getActivity());
+        }
+
+        @Override
+        protected Void run() throws IOException {
+            StarService starService = (StarService)
+                    Gh4Application.get().getService(Gh4Application.STAR_SERVICE);
+            RepositoryId repoId = new RepositoryId(mRepository.getOwner().getLogin(),
+                    mRepository.getName());
+            if (mIsStarring) {
+                starService.unstar(repoId);
+            } else {
+                starService.star(repoId);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onSuccess(Void result) {
+            if (mIsStarring == null) {
+                // user refreshed while the action was in progress
+                return;
+            }
+            mIsStarring = !mIsStarring;
+            if (mIsStarring) {
+                mRepository.setStargazers(mRepository.getStargazers() + 1);
+            } else {
+                mRepository.setStargazers(mRepository.getStargazers() - 1);
+            }
+            updateStargazerUi();
+        }
+    }
+
+    private class UpdateWatchTask extends BackgroundTask<Void> {
+        public UpdateWatchTask() {
+            super(getActivity());
+        }
+
+        @Override
+        protected Void run() throws IOException {
+            WatcherService watcherService = (WatcherService)
+                    Gh4Application.get().getService(Gh4Application.WATCHER_SERVICE);
+            RepositoryId repoId = new RepositoryId(mRepository.getOwner().getLogin(),
+                    mRepository.getName());
+            if (mIsWatching) {
+                watcherService.unwatch(repoId);
+            } else {
+                watcherService.watch(repoId);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onSuccess(Void result) {
+            if (mIsWatching == null) {
+                // user refreshed while the action was in progress
+                return;
+            }
+            mIsWatching = !mIsWatching;
+            if (mIsWatching) {
+                mRepository.setWatchers(mRepository.getWatchers() + 1);
+            } else {
+                mRepository.setWatchers(mRepository.getWatchers() - 1);
+            }
+
+            updateWatcherUi();
         }
     }
 }

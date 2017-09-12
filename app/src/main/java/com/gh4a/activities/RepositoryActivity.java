@@ -21,7 +21,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.gh4a.BackgroundTask;
 import com.gh4a.BaseFragmentPagerActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
@@ -44,12 +43,8 @@ import com.gh4a.utils.UiUtils;
 
 import org.eclipse.egit.github.core.Repository;
 import org.eclipse.egit.github.core.RepositoryBranch;
-import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.RepositoryTag;
-import org.eclipse.egit.github.core.service.StarService;
-import org.eclipse.egit.github.core.service.WatcherService;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,8 +80,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
 
     private static final int LOADER_REPO = 0;
     private static final int LOADER_BRANCHES_AND_TAGS = 1;
-    private static final int LOADER_WATCHING = 2;
-    private static final int LOADER_STARRING = 3;
 
     public static final int PAGE_REPO_OVERVIEW = 0;
     public static final int PAGE_FILES = 1;
@@ -139,30 +132,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
         }
     };
 
-    private final LoaderCallbacks<Boolean> mWatchCallback = new LoaderCallbacks<Boolean>(this) {
-        @Override
-        protected Loader<LoaderResult<Boolean>> onCreateLoader() {
-            return new IsWatchingLoader(RepositoryActivity.this, mRepoOwner, mRepoName);
-        }
-        @Override
-        protected void onResultReady(Boolean result) {
-            mIsWatching = result;
-            supportInvalidateOptionsMenu();
-        }
-    };
-
-    private final LoaderCallbacks<Boolean> mStarCallback = new LoaderCallbacks<Boolean>(this) {
-        @Override
-        protected Loader<LoaderResult<Boolean>> onCreateLoader() {
-            return new IsStarringLoader(RepositoryActivity.this, mRepoOwner, mRepoName);
-        }
-        @Override
-        protected void onResultReady(Boolean result) {
-            mIsStarring = result;
-            supportInvalidateOptionsMenu();
-        }
-    };
-
     private String mRepoOwner;
     private String mRepoName;
     private ActionBar mActionBar;
@@ -173,9 +142,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
     private List<RepositoryBranch> mBranches;
     private List<RepositoryTag> mTags;
     private String mSelectedRef;
-
-    private Boolean mIsWatching;
-    private Boolean mIsStarring;
 
     private RepositoryFragment mRepositoryFragment;
     private ContentListContainerFragment mContentListFragment;
@@ -193,10 +159,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
         setContentShown(false);
 
         getSupportLoaderManager().initLoader(LOADER_REPO, null, mRepoCallback);
-        if (Gh4Application.get().isAuthorized()) {
-            getSupportLoaderManager().initLoader(LOADER_WATCHING, null, mWatchCallback);
-            getSupportLoaderManager().initLoader(LOADER_STARRING, null, mStarCallback);
-        }
     }
 
     @Override
@@ -294,14 +256,12 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
         mContentListFragment = null;
         mActivityFragment = null;
         mRepository = null;
-        mIsStarring = null;
-        mIsWatching = null;
         mBranches = null;
         mTags = null;
         clearRefDependentFragments();
         setContentShown(false);
         invalidateTabs();
-        forceLoaderReload(0, 1, 2, 3);
+        forceLoaderReload(LOADER_REPO, LOADER_BRANCHES_AND_TAGS);
         super.onRefresh();
     }
 
@@ -324,34 +284,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        boolean authorized = Gh4Application.get().isAuthorized();
-        MenuItem watchAction = menu.findItem(R.id.watch);
-        watchAction.setVisible(authorized);
-        if (authorized) {
-            if (mIsWatching == null) {
-                watchAction.setActionView(R.layout.ab_loading);
-                watchAction.expandActionView();
-            } else if (mIsWatching) {
-                watchAction.setTitle(R.string.repo_unwatch_action);
-            } else {
-                watchAction.setTitle(R.string.repo_watch_action);
-            }
-        }
-
-        MenuItem starAction = menu.findItem(R.id.star);
-        starAction.setVisible(authorized);
-        if (authorized) {
-            if (mIsStarring == null) {
-                starAction.setActionView(R.layout.ab_loading);
-                starAction.expandActionView();
-            } else if (mIsStarring) {
-                starAction.setTitle(R.string.repo_unstar_action);
-                starAction.setIcon(R.drawable.unstar);
-            } else {
-                starAction.setTitle(R.string.repo_star_action);
-                starAction.setIcon(R.drawable.star);
-            }
-        }
         if (mRepository == null) {
             menu.removeItem(R.id.ref);
             menu.removeItem(R.id.bookmark);
@@ -377,16 +309,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         String url = "https://github.com/" + mRepoOwner + "/" + mRepoName;
         switch (item.getItemId()) {
-            case R.id.watch:
-                item.setActionView(R.layout.ab_loading);
-                item.expandActionView();
-                new UpdateWatchTask().schedule();
-                return true;
-            case R.id.star:
-                item.setActionView(R.layout.ab_loading);
-                item.expandActionView();
-                new UpdateStarTask().schedule();
-                return true;
             case R.id.ref:
                 if (mBranches == null) {
                     getSupportLoaderManager().initLoader(LOADER_BRANCHES_AND_TAGS,
@@ -532,70 +454,6 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
             title.setText(getName(position));
 
             return convertView;
-        }
-    }
-
-    private class UpdateStarTask extends BackgroundTask<Void> {
-        public UpdateStarTask() {
-            super(RepositoryActivity.this);
-        }
-
-        @Override
-        protected Void run() throws IOException {
-            StarService starService = (StarService)
-                    Gh4Application.get().getService(Gh4Application.STAR_SERVICE);
-            RepositoryId repoId = new RepositoryId(mRepoOwner, mRepoName);
-            if (mIsStarring) {
-                starService.unstar(repoId);
-            } else {
-                starService.star(repoId);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onSuccess(Void result) {
-            if (mIsStarring == null) {
-                // user refreshed while the action was in progress
-                return;
-            }
-            mIsStarring = !mIsStarring;
-            if (mRepositoryFragment != null) {
-                mRepositoryFragment.updateStargazerCount(mIsStarring);
-            }
-            supportInvalidateOptionsMenu();
-        }
-    }
-
-    private class UpdateWatchTask extends BackgroundTask<Void> {
-        public UpdateWatchTask() {
-            super(RepositoryActivity.this);
-        }
-
-        @Override
-        protected Void run() throws IOException {
-            WatcherService watcherService = (WatcherService)
-                    Gh4Application.get().getService(Gh4Application.WATCHER_SERVICE);
-            RepositoryId repoId = new RepositoryId(mRepoOwner, mRepoName);
-            if (mIsWatching) {
-                watcherService.unwatch(repoId);
-            } else {
-                watcherService.watch(repoId);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onSuccess(Void result) {
-            if (mIsWatching == null) {
-                // user refreshed while the action was in progress
-                return;
-            }
-            mIsWatching = !mIsWatching;
-            if (mRepositoryFragment != null) {
-                mRepositoryFragment.updateWatcherCount(mIsWatching);
-            }
-            supportInvalidateOptionsMenu();
         }
     }
 }
