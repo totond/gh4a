@@ -106,8 +106,6 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
 
         @Override
         protected void onResultReady(Integer result) {
-            View v = getView();
-
             OverviewRow issuesRow = mContentView.findViewById(R.id.issues_row);
             int issueCount = mRepository.getOpenIssues() - result;
             issuesRow.setText(getResources().getQuantityString(R.plurals.issue, issueCount, issueCount));
