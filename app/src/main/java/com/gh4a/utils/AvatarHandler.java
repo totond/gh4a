@@ -6,8 +6,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.eclipse.egit.github.core.User;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -36,6 +34,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
+
+import com.meisolsson.githubsdk.model.User;
 
 public class AvatarHandler {
     private static final String TAG = "GravatarHandler";
@@ -97,7 +97,7 @@ public class AvatarHandler {
             return;
         }
 
-        assignAvatar(view, user.getLogin(), user.getId(), user.getAvatarUrl());
+        assignAvatar(view, user.login(), user.id(), user.avatarUrl());
     }
 
     public static void assignAvatar(ImageView view, String userName, int userId, String url) {
@@ -113,15 +113,15 @@ public class AvatarHandler {
         if (user == null) {
             return null;
         }
-        Bitmap cachedBitmap = loadBitmapFromCache(context, user.getId());
+        Bitmap cachedBitmap = loadBitmapFromCache(context, user.id());
         if (cachedBitmap != null) {
             return cachedBitmap;
         }
         try {
-            Bitmap bitmap = fetchBitmap(makeUrl(user.getAvatarUrl(), user.getId()));
+            Bitmap bitmap = fetchBitmap(makeUrl(user.avatarUrl(), user.id()));
             if (bitmap != null) {
                 synchronized (AvatarHandler.class) {
-                    sCache.put(user.getId(), bitmap);
+                    sCache.put(user.id(), bitmap);
                 }
             }
             return bitmap;
