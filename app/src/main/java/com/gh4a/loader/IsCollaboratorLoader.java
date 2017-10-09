@@ -1,7 +1,5 @@
 package com.gh4a.loader;
 
-import java.io.IOException;
-
 import android.content.Context;
 
 import com.gh4a.ApiRequestException;
@@ -21,7 +19,7 @@ public class IsCollaboratorLoader extends BaseLoader<Boolean> {
     }
 
     @Override
-    public Boolean doLoadInBackground() throws IOException {
+    public Boolean doLoadInBackground() throws ApiRequestException {
         Gh4Application app = Gh4Application.get();
         String login = app.getAuthLogin();
         if (login == null) {

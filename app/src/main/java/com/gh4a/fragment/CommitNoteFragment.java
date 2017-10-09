@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.gh4a.ApiRequestException;
 import com.gh4a.BaseActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.ProgressDialogTask;
@@ -26,15 +27,17 @@ import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
 import com.gh4a.widget.EditorBottomSheet;
 import com.meisolsson.githubsdk.model.Commit;
+import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.User;
 import com.meisolsson.githubsdk.model.git.GitComment;
 import com.meisolsson.githubsdk.model.request.repository.CreateCommitComment;
 import com.meisolsson.githubsdk.service.repositories.RepositoryCommentService;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import io.reactivex.Single;
 
 public class CommitNoteFragment extends ListDataBaseFragment<GitComment> implements
         CommitNoteAdapter.OnCommentAction<GitComment>,
@@ -280,11 +283,13 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
     }
 
     @Override
-    public void onSendCommentInBackground(String comment) throws IOException {
+    public Single<GitHubCommentBase> doSendComment(String comment) {
         RepositoryCommentService service =
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
-        ApiHelpers.throwOnFailure(service.createCommitComment(mRepoOwner, mRepoName, mObjectSha,
-                CreateCommitComment.builder().body(comment).build()).blockingGet());
+        CreateCommitComment request = CreateCommitComment.builder().body(comment).build();
+        return service.createCommitComment(mRepoOwner, mRepoName, mObjectSha, request)
+                .compose(response -> ApiHelpers.throwOnFailure(response))
+                .map(response -> response);
     }
 
     @Override
@@ -312,7 +317,7 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
         }
 
         @Override
-        protected Void run() throws Exception {
+        protected Void run() throws ApiRequestException {
             RepositoryCommentService service =
                     Gh4Application.get().getGitHubService(RepositoryCommentService.class);
             ApiHelpers.throwOnFailure(

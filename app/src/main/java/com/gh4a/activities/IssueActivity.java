@@ -38,6 +38,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.gh4a.ApiRequestException;
 import com.gh4a.BaseActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.ProgressDialogTask;
@@ -57,7 +58,6 @@ import com.meisolsson.githubsdk.model.IssueState;
 import com.meisolsson.githubsdk.model.request.issue.IssueRequest;
 import com.meisolsson.githubsdk.service.issues.IssueService;
 
-import java.io.IOException;
 import java.util.Locale;
 
 public class IssueActivity extends BaseActivity implements View.OnClickListener {
@@ -381,7 +381,7 @@ public class IssueActivity extends BaseActivity implements View.OnClickListener 
         }
 
         @Override
-        protected Issue run() throws IOException {
+        protected Issue run() throws ApiRequestException {
             IssueService service = Gh4Application.get().getGitHubService(IssueService.class);
             IssueState targetState = mOpen ? IssueState.Open : IssueState.Closed;
             return ApiHelpers.throwOnFailure(service.editIssue(mRepoOwner, mRepoName, mIssueNumber,

@@ -31,6 +31,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.gh4a.ApiRequestException;
 import com.gh4a.BaseActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.ProgressDialogTask;
@@ -46,7 +47,6 @@ import com.gh4a.widget.DividerItemDecoration;
 import com.meisolsson.githubsdk.model.Label;
 import com.meisolsson.githubsdk.service.issues.IssueLabelService;
 
-import java.io.IOException;
 import java.util.List;
 
 public class IssueLabelListActivity extends BaseActivity implements
@@ -296,7 +296,7 @@ public class IssueLabelListActivity extends BaseActivity implements
         }
 
         @Override
-        protected Void run() throws IOException {
+        protected Void run() throws ApiRequestException {
             IssueLabelService service = Gh4Application.get().getGitHubService(IssueLabelService.class);
             ApiHelpers.throwOnFailure(service.deleteLabel(mRepoOwner, mRepoName, mLabelName).blockingGet());
             return null;
@@ -332,7 +332,7 @@ public class IssueLabelListActivity extends BaseActivity implements
         }
 
         @Override
-        protected Void run() throws IOException {
+        protected Void run() throws ApiRequestException {
             IssueLabelService service = Gh4Application.get().getGitHubService(IssueLabelService.class);
             Label label = Label.builder().name(mNewLabelName).color(mColor).build();
 
@@ -368,7 +368,7 @@ public class IssueLabelListActivity extends BaseActivity implements
         }
 
         @Override
-        protected Void run() throws IOException {
+        protected Void run() throws ApiRequestException {
             IssueLabelService service =
                     Gh4Application.get().getGitHubService(IssueLabelService.class);
 

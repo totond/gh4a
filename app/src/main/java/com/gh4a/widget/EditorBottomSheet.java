@@ -29,20 +29,23 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.gh4a.ApiRequestException;
 import com.gh4a.ProgressDialogTask;
 import com.gh4a.R;
 import com.gh4a.utils.UiUtils;
+import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.User;
 
-import java.io.IOException;
 import java.util.Set;
+
+import io.reactivex.Single;
 
 public class EditorBottomSheet extends FrameLayout implements View.OnClickListener,
         View.OnTouchListener, AppBarLayout.OnOffsetChangedListener {
 
     public interface Callback {
         @StringRes int getCommentEditorHintResId();
-        void onSendCommentInBackground(String comment) throws IOException;
+        Single<GitHubCommentBase> doSendComment(String comment);
         void onCommentSent();
         FragmentActivity getActivity();
         CoordinatorLayout getRootLayout();
@@ -424,8 +427,8 @@ public class EditorBottomSheet extends FrameLayout implements View.OnClickListen
         }
 
         @Override
-        protected Void run() throws IOException {
-            mCallback.onSendCommentInBackground(mText);
+        protected Void run() throws ApiRequestException {
+            mCallback.doSendComment(mText).blockingGet();
             return null;
         }
 
