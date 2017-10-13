@@ -14,7 +14,6 @@ import com.gh4a.loader.IssueCommentListLoader;
 import com.gh4a.loader.LoaderResult;
 import com.gh4a.loader.TimelineItem;
 import com.gh4a.utils.IntentUtils;
-import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.Issue;
 import com.meisolsson.githubsdk.model.IssueState;
@@ -23,6 +22,7 @@ import com.meisolsson.githubsdk.service.issues.IssueCommentService;
 import java.util.List;
 
 import io.reactivex.Single;
+import retrofit2.Response;
 
 public class IssueFragment extends IssueFragmentBase {
     public static IssueFragment newInstance(String repoOwner, String repoName, Issue issue,
@@ -83,11 +83,10 @@ public class IssueFragment extends IssueFragmentBase {
     }
 
     @Override
-    protected Single<Boolean> doDeleteComment(GitHubCommentBase comment) {
+    protected Single<Response<Boolean>> doDeleteComment(GitHubCommentBase comment) {
         IssueCommentService service =
                 Gh4Application.get().getGitHubService(IssueCommentService.class);
-        return service.deleteIssueComment(mRepoOwner, mRepoName, comment.id())
-                .compose(RxUtils::throwOnFailure);
+        return service.deleteIssueComment(mRepoOwner, mRepoName, comment.id());
     }
 
     @Override

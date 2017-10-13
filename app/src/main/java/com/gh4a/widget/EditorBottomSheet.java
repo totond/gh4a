@@ -29,9 +29,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.gh4a.ApiRequestException;
-import com.gh4a.ProgressDialogTask;
 import com.gh4a.R;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.UiUtils;
 import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.User;
@@ -39,6 +38,7 @@ import com.meisolsson.githubsdk.model.User;
 import java.util.Set;
 
 import io.reactivex.Single;
+import retrofit2.Response;
 
 public class EditorBottomSheet extends FrameLayout implements View.OnClickListener,
         View.OnTouchListener, AppBarLayout.OnOffsetChangedListener {
@@ -237,7 +237,7 @@ public class EditorBottomSheet extends FrameLayout implements View.OnClickListen
                 setAdvancedMode(!isInAdvancedMode());
                 break;
             case R.id.send_button:
-                new CommentTask(getCommentText().toString()).schedule();
+                sendComment(getCommentText().toString());
                 UiUtils.hideImeForView(mCallback.getActivity().getCurrentFocus());
                 break;
         }
@@ -413,37 +413,18 @@ public class EditorBottomSheet extends FrameLayout implements View.OnClickListen
         return mBehavior;
     }
 
-    private class CommentTask extends ProgressDialogTask<Void> {
-        private final String mText;
+    private void sendComment(String comment) {
+        FragmentActivity activity = mCallback.getActivity();
+        CoordinatorLayout rootLayout = mCallback.getRootLayout();
 
-        public CommentTask(String text) {
-            super(mCallback.getActivity(), mCallback.getRootLayout(), R.string.saving_comment);
-            mText = text;
-        }
-
-        @Override
-        protected ProgressDialogTask<Void> clone() {
-            return new CommentTask(mText);
-        }
-
-        @Override
-        protected Void run() throws ApiRequestException {
-            mCallback.doSendComment(mText).blockingGet();
-            return null;
-        }
-
-        @Override
-        protected void onSuccess(Void result) {
-            mCallback.onCommentSent();
-
-            setCommentText(null, true);
-            setAdvancedMode(false);
-        }
-
-        @Override
-        protected String getErrorMessage() {
-            return getContext().getString(R.string.issue_error_comment);
-        }
+        mCallback.doSendComment(comment)
+                .compose(RxUtils.wrapForBackgroundTask(activity, rootLayout,
+                        R.string.saving_comment, R.string.issue_error_comment))
+                .subscribe(result -> {
+                    mCallback.onCommentSent();
+                    setCommentText(null, true);
+                    setAdvancedMode(false);
+                }, error -> {});
     }
 
     private static class AdvancedEditorPagerAdapter extends PagerAdapter {

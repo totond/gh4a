@@ -38,6 +38,7 @@ import com.meisolsson.githubsdk.service.pull_request.PullRequestReviewCommentSer
 import java.util.List;
 
 import io.reactivex.Single;
+import retrofit2.Response;
 
 public class PullRequestDiffViewerActivity extends DiffViewerActivity<ReviewComment> {
     public static Intent makeIntent(Context context, String repoOwner, String repoName, int number,
@@ -105,11 +106,10 @@ public class PullRequestDiffViewerActivity extends DiffViewerActivity<ReviewComm
     }
 
     @Override
-    protected Single<Boolean> deleteComment(long id) {
+    protected Single<Response<Boolean>> doDeleteComment(long id) {
         PullRequestReviewCommentService service =
                 Gh4Application.get().getGitHubService(PullRequestReviewCommentService.class);
-        return service.deleteComment(mRepoOwner, mRepoName, id)
-                .compose(RxUtils::throwOnFailure);
+        return service.deleteComment(mRepoOwner, mRepoName, id);
     }
 
     @Override

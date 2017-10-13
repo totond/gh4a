@@ -37,6 +37,7 @@ import com.meisolsson.githubsdk.service.repositories.RepositoryCommentService;
 import java.util.List;
 
 import io.reactivex.Single;
+import retrofit2.Response;
 
 public class CommitDiffViewerActivity extends DiffViewerActivity<GitComment> {
     public static Intent makeIntent(Context context, String repoOwner, String repoName,
@@ -87,12 +88,11 @@ public class CommitDiffViewerActivity extends DiffViewerActivity<GitComment> {
     }
 
     @Override
-    public Single<Boolean> deleteComment(long id) {
+    public Single<Response<Boolean>> doDeleteComment(long id) {
         RepositoryCommentService service =
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
 
-        return service.deleteCommitComment(mRepoOwner, mRepoName, id)
-                .compose(RxUtils::throwOnFailure);
+        return service.deleteCommitComment(mRepoOwner, mRepoName, id);
     }
 
     @Override
