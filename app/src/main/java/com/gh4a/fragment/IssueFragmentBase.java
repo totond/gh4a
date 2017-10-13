@@ -48,6 +48,7 @@ import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.AvatarHandler;
 import com.gh4a.utils.HttpImageGetter;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.StringUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.EditorBottomSheet;
@@ -441,7 +442,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
         ReactionService service = Gh4Application.get().getGitHubService(ReactionService.class);
         ReactionRequest request = ReactionRequest.builder().content(content).build();
         return service.createIssueReaction(mRepoOwner, mRepoName, mIssue.number(), request)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 
     @Override
@@ -456,7 +457,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
         ReactionService service = Gh4Application.get().getGitHubService(ReactionService.class);
         ReactionRequest request = ReactionRequest.builder().content(content).build();
         return service.createIssueCommentReaction(mRepoOwner, mRepoName,comment.id(), request)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 
     @Override
@@ -512,7 +513,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
         IssueCommentService service = Gh4Application.get().getGitHubService(IssueCommentService.class);
         CommentRequest request = CommentRequest.builder().body(comment).build();
         return service.createIssueComment(mRepoOwner, mRepoName, mIssue.number(), request)
-                .compose(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::throwOnFailure)
                 .map(response -> response);
     }
 

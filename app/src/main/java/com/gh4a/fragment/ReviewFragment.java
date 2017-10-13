@@ -23,6 +23,7 @@ import com.gh4a.loader.ReviewTimelineLoader;
 import com.gh4a.loader.TimelineItem;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.Reaction;
 import com.meisolsson.githubsdk.model.Review;
@@ -203,7 +204,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
         final Single<Response<Reaction>> responseSingle = comment instanceof ReviewComment
                 ? service.createPullRequestReviewCommentReaction(mRepoOwner, mRepoName, comment.id(), request)
                 : service.createIssueCommentReaction(mRepoOwner, mRepoName, comment.id(), request);
-        return responseSingle.compose(ApiHelpers::throwOnFailure);
+        return responseSingle.compose(RxUtils::throwOnFailure);
     }
 
     private class DeleteCommentTask extends ProgressDialogTask<Void> {
@@ -231,7 +232,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
                         Gh4Application.get().getGitHubService(IssueCommentService.class);
                 response = service.deleteIssueComment(mRepoOwner, mRepoName, mComment.id());
             }
-            response.compose(ApiHelpers::throwOnFailure).blockingGet();
+            response.compose(RxUtils::throwOnFailure).blockingGet();
             return null;
         }
 

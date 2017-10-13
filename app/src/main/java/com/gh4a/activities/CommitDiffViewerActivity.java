@@ -24,6 +24,7 @@ import com.gh4a.loader.CommitCommentListLoader;
 import com.gh4a.loader.LoaderResult;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.widget.ReactionBar;
 import com.meisolsson.githubsdk.model.PositionalCommentBase;
 import com.meisolsson.githubsdk.model.Reaction;
@@ -91,7 +92,7 @@ public class CommitDiffViewerActivity extends DiffViewerActivity<GitComment> {
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
 
         return service.deleteCommitComment(mRepoOwner, mRepoName, id)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 
     @Override
@@ -114,6 +115,6 @@ public class CommitDiffViewerActivity extends DiffViewerActivity<GitComment> {
         ReactionRequest request = ReactionRequest.builder().content(content).build();
 
         return service.createCommitCommentReaction(mRepoOwner, mRepoName, comment.comment.id(), request)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 }

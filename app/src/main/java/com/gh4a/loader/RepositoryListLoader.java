@@ -6,6 +6,7 @@ import com.gh4a.ApiRequestException;
 import com.gh4a.Gh4Application;
 import com.gh4a.ServiceFactory;
 import com.gh4a.utils.ApiHelpers;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.Page;
 import com.meisolsson.githubsdk.model.Repository;
 import com.meisolsson.githubsdk.model.UserType;
@@ -47,7 +48,7 @@ public class RepositoryListLoader extends BaseLoader<Collection<Repository>> {
         }
 
         return observable
-                .compose(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::throwOnFailure)
                 .blockingGet()
                 .items();
     }

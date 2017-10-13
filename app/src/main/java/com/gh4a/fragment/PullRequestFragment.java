@@ -37,8 +37,8 @@ import com.gh4a.loader.LoaderResult;
 import com.gh4a.loader.PullRequestCommentListLoader;
 import com.gh4a.loader.ReferenceLoader;
 import com.gh4a.loader.TimelineItem;
-import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.widget.PullRequestBranchInfoView;
 import com.gh4a.widget.CommitStatusBox;
 
@@ -244,7 +244,7 @@ public class PullRequestFragment extends IssueFragmentBase {
                     Gh4Application.get().getGitHubService(IssueCommentService.class);
             response = service.deleteIssueComment(mRepoOwner, mRepoName, comment.id());
         }
-        return response.compose(ApiHelpers::throwOnFailure);
+        return response.compose(RxUtils::throwOnFailure);
     }
 
     @Override
@@ -303,8 +303,9 @@ public class PullRequestFragment extends IssueFragmentBase {
                     .sha(head.sha())
                     .build();
 
-            return ApiHelpers.throwOnFailure(
-                    service.createGitReference(owner, repo, request).blockingGet());
+            return service.createGitReference(owner, repo, request)
+                    .compose(RxUtils::throwOnFailure)
+                    .blockingGet();
         }
 
         @Override
@@ -342,8 +343,9 @@ public class PullRequestFragment extends IssueFragmentBase {
             String owner = head.repo().owner().login();
             String repo = head.repo().name();
 
-            ApiHelpers.throwOnFailure(
-                    service.deleteGitReference(owner, repo, head.ref()).blockingGet());
+            service.deleteGitReference(owner, repo, head.ref())
+                    .compose(RxUtils::throwOnFailure)
+                    .blockingGet();
             return null;
         }
 

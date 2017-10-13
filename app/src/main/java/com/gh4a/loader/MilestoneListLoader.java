@@ -5,6 +5,7 @@ import android.content.Context;
 import com.gh4a.ApiRequestException;
 import com.gh4a.Gh4Application;
 import com.gh4a.utils.ApiHelpers;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.IssueState;
 import com.meisolsson.githubsdk.model.Milestone;
 import com.meisolsson.githubsdk.service.issues.IssueMilestoneService;
@@ -31,7 +32,7 @@ public class MilestoneListLoader extends BaseLoader<List<Milestone>> {
                 Gh4Application.get().getGitHubService(IssueMilestoneService.class);
         List<Milestone> milestones = ApiHelpers.PageIterator
                 .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, page))
-                .compose(ApiHelpers.PageIterator.filter(m -> mState == null || mState == m.state()))
+                .compose(RxUtils.filter(m -> mState == null || mState == m.state()))
                 .blockingGet();
 
         if (milestones != null && mState == null) {

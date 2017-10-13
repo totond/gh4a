@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.gh4a.ApiRequestException;
 import com.gh4a.Gh4Application;
-import com.gh4a.utils.ApiHelpers;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.PullRequest;
 import com.meisolsson.githubsdk.service.pull_request.PullRequestService;
 
@@ -33,6 +33,6 @@ public class PullRequestLoader extends BaseLoader<PullRequest> {
         PullRequestService service =
                 Gh4Application.get().getGitHubService(PullRequestService.class);
         return service.getPullRequest(repoOwner, repoName, pullRequestNumber)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 }

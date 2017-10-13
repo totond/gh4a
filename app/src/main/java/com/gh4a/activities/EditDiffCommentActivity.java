@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
-import com.gh4a.utils.ApiHelpers;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.request.CommentRequest;
 import com.meisolsson.githubsdk.model.request.repository.CreateCommitComment;
@@ -60,7 +60,7 @@ public class EditDiffCommentActivity extends EditCommentActivity {
                 .position(extras.getInt("position"))
                 .build();
         return service.createCommitComment(repoOwner, repoName, commitId, request)
-                .compose(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::throwOnFailure)
                 .map(response -> response);
     }
 
@@ -71,7 +71,7 @@ public class EditDiffCommentActivity extends EditCommentActivity {
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
         CommentRequest request = CommentRequest.builder().body(body).build();
         return service.editCommitComment(repoOwner, repoName, commentId, request)
-                .compose(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::throwOnFailure)
                 .map(response -> response);
     }
 }

@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.gh4a.ApiRequestException;
 import com.gh4a.Gh4Application;
-import com.gh4a.utils.ApiHelpers;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.Commit;
 import com.meisolsson.githubsdk.service.repositories.RepositoryCommitService;
 
@@ -32,6 +32,6 @@ public class CommitLoader extends BaseLoader<Commit> {
         RepositoryCommitService service =
                 Gh4Application.get().getGitHubService(RepositoryCommitService.class);
         return service.getCommit(repoOwner, repoName, objectSha)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 }

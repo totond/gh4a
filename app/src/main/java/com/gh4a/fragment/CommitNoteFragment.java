@@ -25,6 +25,7 @@ import com.gh4a.loader.CommitCommentListLoader;
 import com.gh4a.loader.LoaderResult;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.widget.EditorBottomSheet;
 import com.meisolsson.githubsdk.model.Commit;
 import com.meisolsson.githubsdk.model.GitHubCommentBase;
@@ -288,7 +289,7 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
         CreateCommitComment request = CreateCommitComment.builder().body(comment).build();
         return service.createCommitComment(mRepoOwner, mRepoName, mObjectSha, request)
-                .compose(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::throwOnFailure)
                 .map(response -> response);
     }
 

@@ -36,6 +36,7 @@ import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.AvatarHandler;
 import com.gh4a.utils.HttpImageGetter;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.StringUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.ReactionBar;
@@ -218,7 +219,7 @@ public class CommitNoteAdapter extends RootAdapter<GitComment, CommitNoteAdapter
         ReactionService service = Gh4Application.get().getGitHubService(ReactionService.class);
         ReactionRequest request = ReactionRequest.builder().content(content).build();
         return service.createCommitCommentReaction(mRepoOwner, mRepoName, comment.id(), request)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 
     @Override

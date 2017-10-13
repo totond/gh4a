@@ -25,6 +25,7 @@ import com.gh4a.loader.LoaderResult;
 import com.gh4a.loader.PullRequestCommentsLoader;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.widget.ReactionBar;
 import com.meisolsson.githubsdk.model.PositionalCommentBase;
 import com.meisolsson.githubsdk.model.Reaction;
@@ -108,7 +109,7 @@ public class PullRequestDiffViewerActivity extends DiffViewerActivity<ReviewComm
         PullRequestReviewCommentService service =
                 Gh4Application.get().getGitHubService(PullRequestReviewCommentService.class);
         return service.deleteComment(mRepoOwner, mRepoName, id)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 
     @Override
@@ -127,6 +128,6 @@ public class PullRequestDiffViewerActivity extends DiffViewerActivity<ReviewComm
         ReactionRequest request = ReactionRequest.builder().content(content).build();
 
         return service.createPullRequestReviewCommentReaction(mRepoOwner, mRepoName, comment.comment.id(), request)
-                .compose(ApiHelpers::throwOnFailure);
+                .compose(RxUtils::throwOnFailure);
     }
 }

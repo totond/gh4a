@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.gh4a.ApiRequestException;
 import com.gh4a.Gh4Application;
-import com.gh4a.utils.ApiHelpers;
+import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.service.repositories.RepositoryCollaboratorService;
 
 public class IsCollaboratorLoader extends BaseLoader<Boolean> {
@@ -30,7 +30,7 @@ public class IsCollaboratorLoader extends BaseLoader<Boolean> {
                 app.getGitHubService(RepositoryCollaboratorService.class);
         try {
             return service.isUserCollaborator(mRepoOwner, mRepoName, login)
-                    .compose(ApiHelpers::throwOnFailure)
+                    .compose(RxUtils::throwOnFailure)
                     .map(result -> true) // there's no actual content, result is always null
                     .blockingGet();
         } catch (ApiRequestException e) {
