@@ -29,8 +29,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.gh4a.ApiRequestException;
-import com.gh4a.BackgroundTask;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
 import com.gh4a.activities.FollowerFollowingListActivity;
@@ -47,6 +45,7 @@ import com.gh4a.loader.RepositoryListLoader;
 import com.gh4a.loader.UserLoader;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.AvatarHandler;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.StringUtils;
 import com.meisolsson.githubsdk.model.Repository;
 import com.meisolsson.githubsdk.model.User;
@@ -58,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.Single;
 import retrofit2.Response;
 
 public class UserFragment extends LoadingFragmentBase implements View.OnClickListener {
@@ -203,7 +203,7 @@ public class UserFragment extends LoadingFragmentBase implements View.OnClickLis
         if (item.getItemId() == R.id.follow) {
             item.setActionView(R.layout.ab_loading);
             item.expandActionView();
-            new UpdateFollowTask().schedule();
+            toggleFollowingState();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -411,27 +411,18 @@ public class UserFragment extends LoadingFragmentBase implements View.OnClickLis
         tvFollowersCount.setText(String.valueOf(mUser.followers()));
     }
 
-    private class UpdateFollowTask extends BackgroundTask<Void> {
-        public UpdateFollowTask() {
-            super(UserFragment.this.getActivity());
-        }
-
-        @Override
-        protected Void run() throws ApiRequestException {
-            UserFollowerService service =
-                    Gh4Application.get().getGitHubService(UserFollowerService.class);
-            Response<Boolean> response = mIsFollowing
-                    ? service.unfollowUser(mUserLogin).blockingGet()
-                    : service.followUser(mUserLogin).blockingGet();
-            ApiHelpers.throwOnFailure(response);
-            return null;
-        }
-
-        @Override
-        protected void onSuccess(Void result) {
-            mIsFollowing = !mIsFollowing;
-            updateFollowingAction();
-            getActivity().invalidateOptionsMenu();
-        }
+    private void toggleFollowingState() {
+        UserFollowerService service =
+                Gh4Application.get().getGitHubService(UserFollowerService.class);
+        Single<Response<Boolean>> responseSingle = mIsFollowing
+                ? service.unfollowUser(mUserLogin)
+                : service.followUser(mUserLogin);
+        responseSingle.compose(RxUtils::throwOnFailure)
+                .compose(RxUtils::doInBackground)
+                .subscribe(result -> {
+                    mIsFollowing = !mIsFollowing;
+                    updateFollowingAction();
+                    getActivity().invalidateOptionsMenu();
+                }, error -> getActivity().invalidateOptionsMenu());
     }
 }
