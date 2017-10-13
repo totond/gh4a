@@ -29,8 +29,9 @@ public class IsCollaboratorLoader extends BaseLoader<Boolean> {
         RepositoryCollaboratorService service =
                 app.getGitHubService(RepositoryCollaboratorService.class);
         try {
-            return ApiHelpers.throwOnFailure(
-                    service.isUserCollaborator(mRepoOwner, mRepoName, login).blockingGet());
+            return ApiHelpers.throwOnFailure(service.isUserCollaborator(mRepoOwner, mRepoName, login))
+                    .map(result -> true) // there's no actual content, result is always null
+                    .blockingGet();
         } catch (ApiRequestException e) {
             if (e.getStatus() == 403) {
                 // the API returns 403 if the user doesn't have push access,
