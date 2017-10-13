@@ -108,7 +108,7 @@ public class PullRequestDiffViewerActivity extends DiffViewerActivity<ReviewComm
         PullRequestReviewCommentService service =
                 Gh4Application.get().getGitHubService(PullRequestReviewCommentService.class);
         return service.deleteComment(mRepoOwner, mRepoName, id)
-                .compose(response -> ApiHelpers.throwOnFailure(response));
+                .compose(ApiHelpers::throwOnFailure);
     }
 
     @Override
@@ -127,6 +127,6 @@ public class PullRequestDiffViewerActivity extends DiffViewerActivity<ReviewComm
         ReactionRequest request = ReactionRequest.builder().content(content).build();
 
         return service.createPullRequestReviewCommentReaction(mRepoOwner, mRepoName, comment.comment.id(), request)
-                .compose(response -> ApiHelpers.throwOnFailure(response));
+                .compose(ApiHelpers::throwOnFailure);
     }
 }

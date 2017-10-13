@@ -91,7 +91,7 @@ public class CommitDiffViewerActivity extends DiffViewerActivity<GitComment> {
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
 
         return service.deleteCommitComment(mRepoOwner, mRepoName, id)
-                .compose(response -> ApiHelpers.throwOnFailure(response));
+                .compose(ApiHelpers::throwOnFailure);
     }
 
     @Override
@@ -114,6 +114,6 @@ public class CommitDiffViewerActivity extends DiffViewerActivity<GitComment> {
         ReactionRequest request = ReactionRequest.builder().content(content).build();
 
         return service.createCommitCommentReaction(mRepoOwner, mRepoName, comment.comment.id(), request)
-                .compose(response -> ApiHelpers.throwOnFailure(response));
+                .compose(ApiHelpers::throwOnFailure);
     }
 }

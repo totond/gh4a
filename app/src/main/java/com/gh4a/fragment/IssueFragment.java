@@ -87,7 +87,7 @@ public class IssueFragment extends IssueFragmentBase {
         IssueCommentService service =
                 Gh4Application.get().getGitHubService(IssueCommentService.class);
         return service.deleteIssueComment(mRepoOwner, mRepoName, comment.id())
-                .compose(response -> ApiHelpers.throwOnFailure(response));
+                .compose(ApiHelpers::throwOnFailure);
     }
 
     @Override

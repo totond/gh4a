@@ -244,7 +244,7 @@ public class PullRequestFragment extends IssueFragmentBase {
                     Gh4Application.get().getGitHubService(IssueCommentService.class);
             response = service.deleteIssueComment(mRepoOwner, mRepoName, comment.id());
         }
-        return response.compose(r -> ApiHelpers.throwOnFailure(r));
+        return response.compose(ApiHelpers::throwOnFailure);
     }
 
     @Override

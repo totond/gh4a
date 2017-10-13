@@ -31,7 +31,7 @@ public class MilestoneListLoader extends BaseLoader<List<Milestone>> {
                 Gh4Application.get().getGitHubService(IssueMilestoneService.class);
         List<Milestone> milestones = ApiHelpers.PageIterator
                 .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, page))
-                .compose(single -> ApiHelpers.PageIterator.filter(single, m -> mState == null || mState == m.state()))
+                .compose(ApiHelpers.PageIterator.filter(m -> mState == null || mState == m.state()))
                 .blockingGet();
 
         if (milestones != null && mState == null) {
