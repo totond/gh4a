@@ -688,7 +688,7 @@ public class IssueListActivity extends BaseFragmentPagerActivity implements
         } else {
             RepositoryCollaboratorService service =
                     app.getGitHubService(RepositoryCollaboratorService.class);
-            // TODO: consider moving to a shared place
+            // TODO: consider moving to a shared place - shared with IssueEditActivity
             observable = service.isUserCollaborator(mRepoOwner, mRepoName, login)
                     .compose(RxUtils::throwOnFailure)
                     .compose(RxUtils::doInBackground)
