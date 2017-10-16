@@ -51,6 +51,7 @@ import com.meisolsson.githubsdk.service.search.SearchService;
 import com.philosophicalhacker.lib.RxLoader;
 import com.vdurmont.emoji.EmojiParser;
 
+import java.net.HttpURLConnection;
 import java.util.Locale;
 
 import retrofit2.Response;
@@ -347,7 +348,7 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
                 RepositoryContentService.class, "application/vnd.github.v3.html", null, null);
 
         service.getReadmeHtml(repoOwner, repoName, mRef)
-                .map(response -> response.code() == 404 ? Response.success((String) null) : response)
+                .compose(RxUtils.mapFailureToValue(HttpURLConnection.HTTP_NOT_FOUND, null))
                 .compose(RxUtils::throwOnFailure)
                 .map(html -> {
                     if (html != null) {
