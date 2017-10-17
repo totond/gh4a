@@ -223,7 +223,7 @@ public class GistActivity extends BaseActivity implements View.OnClickListener {
         GistService service = Gh4Application.get().getGitHubService(GistService.class);
         Single<Response<Boolean>> responseSingle = mIsStarred
                 ? service.unstarGist(mGistId) : service.starGist(mGistId);
-        responseSingle.compose(RxUtils::throwOnFailure)
+        responseSingle.map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> {
                     mIsStarred = !mIsStarred;

@@ -690,7 +690,7 @@ public class IssueListActivity extends BaseFragmentPagerActivity implements
                     app.getGitHubService(RepositoryCollaboratorService.class);
             // TODO: consider moving to a shared place - shared with IssueEditActivity
             observable = service.isUserCollaborator(mRepoOwner, mRepoName, login)
-                    .compose(RxUtils::throwOnFailure)
+                    .map(ApiHelpers::throwOnFailure)
                     .compose(RxUtils::doInBackground)
                     // the API returns 403 if the user doesn't have push access,
                     // which in turn means he isn't a collaborator

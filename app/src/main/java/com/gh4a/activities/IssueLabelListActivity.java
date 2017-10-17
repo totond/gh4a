@@ -38,6 +38,7 @@ import com.gh4a.adapter.RootAdapter;
 import com.gh4a.loader.LabelListLoader;
 import com.gh4a.loader.LoaderCallbacks;
 import com.gh4a.loader.LoaderResult;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.DividerItemDecoration;
@@ -277,7 +278,7 @@ public class IssueLabelListActivity extends BaseActivity implements
         String errorMessage = getString(R.string.issue_error_delete_label, label.base().name());
         IssueLabelService service = Gh4Application.get().getGitHubService(IssueLabelService.class);
         service.deleteLabel(mRepoOwner, mRepoName, label.base().name())
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.deleting_msg, errorMessage))
                 .subscribe(result -> {
                     forceLoaderReload(0);
@@ -295,7 +296,7 @@ public class IssueLabelListActivity extends BaseActivity implements
                 .build();
 
         service.editLabel(mRepoOwner, mRepoName, oldLabel.name(), newLabel)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.saving_msg, errorMessage))
                 .subscribe(result -> {
                     forceLoaderReload(0);
@@ -312,7 +313,7 @@ public class IssueLabelListActivity extends BaseActivity implements
                 .build();
 
         service.createLabel(mRepoOwner, mRepoName, newLabel)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.saving_msg, errorMessage))
                 .subscribe(result -> {
                     mAddedLabel = null;

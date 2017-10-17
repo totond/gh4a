@@ -33,6 +33,7 @@ import com.gh4a.BuildConfig;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
 import com.gh4a.ServiceFactory;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
 import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.core.ServiceGenerator;
@@ -111,7 +112,7 @@ public class Github4AndroidActivity extends BaseActivity implements View.OnClick
                     .build();
 
             Single<GitHubToken> tokenSingle = service.getToken(request)
-                    .compose(RxUtils::throwOnFailure)
+                    .map(ApiHelpers::throwOnFailure)
                     .compose(RxUtils::doInBackground);
 
             Single<User> userSingle = tokenSingle
@@ -120,7 +121,7 @@ public class Github4AndroidActivity extends BaseActivity implements View.OnClick
                                 UserService.class, null, token.accessToken(), null);
                         return userService.getUser();
                     })
-                    .compose(RxUtils::throwOnFailure)
+                    .map(ApiHelpers::throwOnFailure)
                     .compose(RxUtils::doInBackground);
 
             Single.zip(tokenSingle, userSingle, (token, user) -> Pair.create(token, user))

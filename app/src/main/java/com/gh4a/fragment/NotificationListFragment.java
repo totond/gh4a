@@ -240,7 +240,7 @@ public class NotificationListFragment extends LoadingListFragmentBase implements
                 .subscribed(false)
                 .build();
         service.setNotificationThreadSubscription(notification.id(), request)
-                    .compose(RxUtils::throwOnFailure)
+                    .map(ApiHelpers::throwOnFailure)
                     .compose(RxUtils::doInBackground)
                     .subscribe(result -> handleMarkAsRead(null, notification));
     }
@@ -299,7 +299,7 @@ public class NotificationListFragment extends LoadingListFragmentBase implements
             }
         }
 
-        responseSingle.compose(RxUtils::throwOnFailure)
+        responseSingle.map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> handleMarkAsRead(repository, notification), error -> {});
     }

@@ -324,7 +324,7 @@ public class IssueActivity extends BaseActivity implements View.OnClickListener 
                 reopen ? R.string.issue_error_reopen : R.string.issue_error_close;
 
         service.editIssue(mRepoOwner, mRepoName, mIssueNumber, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, dialogResId, getString(errorMessageResId, mIssueNumber)))
                 .subscribe(result -> {
                     mIssue = result;

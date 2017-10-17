@@ -529,7 +529,7 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
                 .build();
 
         service.editPullRequest(mRepoOwner, mRepoName, mPullRequestNumber, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, dialogMessageResId, errorMessage))
                 .subscribe(result -> {
                     mPullRequest = result;
@@ -546,7 +546,7 @@ public class PullRequestActivity extends BaseFragmentPagerActivity implements
                 .build();
 
         service.mergePullRequest(mRepoOwner, mRepoName, mPullRequestNumber, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.merging_msg, errorMessage))
                 .subscribe(result -> {
                     if (result.merged()) {

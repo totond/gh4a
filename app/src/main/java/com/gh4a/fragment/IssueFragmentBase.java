@@ -440,7 +440,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
         ReactionService service = Gh4Application.get().getGitHubService(ReactionService.class);
         ReactionRequest request = ReactionRequest.builder().content(content).build();
         return service.createIssueReaction(mRepoOwner, mRepoName, mIssue.number(), request)
-                .compose(RxUtils::throwOnFailure);
+                .map(ApiHelpers::throwOnFailure);
     }
 
     @Override
@@ -455,7 +455,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
         ReactionService service = Gh4Application.get().getGitHubService(ReactionService.class);
         ReactionRequest request = ReactionRequest.builder().content(content).build();
         return service.createIssueCommentReaction(mRepoOwner, mRepoName,comment.id(), request)
-                .compose(RxUtils::throwOnFailure);
+                .map(ApiHelpers::throwOnFailure);
     }
 
     @Override
@@ -511,7 +511,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
         IssueCommentService service = Gh4Application.get().getGitHubService(IssueCommentService.class);
         CommentRequest request = CommentRequest.builder().body(comment).build();
         return service.createIssueComment(mRepoOwner, mRepoName, mIssue.number(), request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .map(response -> response);
     }
 
@@ -556,7 +556,7 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
 
     private void handleDeleteComment(GitHubCommentBase comment) {
         doDeleteComment(comment)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.deleting_msg, R.string.error_delete_comment))
                 .subscribe(result -> {

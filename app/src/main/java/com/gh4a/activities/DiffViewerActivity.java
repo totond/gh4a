@@ -543,7 +543,7 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
 
     private void deleteComment(long id) {
         doDeleteComment(id)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.deleting_msg,
                         getString(R.string.error_delete_commit_comment)))
                 .subscribe(result -> {

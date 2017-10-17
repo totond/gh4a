@@ -445,7 +445,7 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
         Single<Response<Boolean>> responseSingle = mIsStarring
                 ? service.unstarRepository(mRepoOwner, mRepoName)
                 : service.starRepository(mRepoOwner, mRepoName);
-        responseSingle.compose(RxUtils::throwOnFailure)
+        responseSingle.map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> {
                     if (mIsStarring != null) {
@@ -465,13 +465,13 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
 
         if (mIsWatching) {
             responseSingle = service.deleteRepositorySubscription(mRepoOwner, mRepoName)
-                    .compose(RxUtils::throwOnFailure);
+                    .map(ApiHelpers::throwOnFailure);
         } else {
             SubscriptionRequest request = SubscriptionRequest.builder()
                     .subscribed(true)
                     .build();
             responseSingle = service.setRepositorySubscription(mRepoOwner, mRepoName, request)
-                    .compose(RxUtils::throwOnFailure);
+                    .map(ApiHelpers::throwOnFailure);
         }
 
         responseSingle.compose(RxUtils::doInBackground)
@@ -486,7 +486,7 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
     private void loadRepository(boolean force) {
         RepositoryService service = Gh4Application.get().getGitHubService(RepositoryService.class);
         service.getRepository(mRepoOwner, mRepoName)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 .compose(this::handleError)
                 .toObservable()
@@ -512,7 +512,7 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
         }
         StarringService service = app.getGitHubService(StarringService.class);
         service.checkIfRepositoryIsStarred(mRepoOwner, mRepoName)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 // success response means 'starred'
                 .map(result -> true)
@@ -534,7 +534,7 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
         }
         WatchingService service = app.getGitHubService(WatchingService.class);
         service.getRepositorySubscription(mRepoOwner, mRepoName)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 .compose(this::handleError)
                 .map(subscription -> subscription.subscribed())

@@ -45,6 +45,7 @@ import android.widget.TextView;
 import com.gh4a.BasePagerActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.IssueStateTrackingFloatingActionButton;
@@ -325,7 +326,7 @@ public class IssueMilestoneEditActivity extends BasePagerActivity implements
                 : service.createMilestone(mRepoOwner, mRepoName, request);
 
         responseSingle
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.saving_msg, errorMessage))
                 .subscribe(result -> {
                     mMilestone = result;
@@ -338,7 +339,7 @@ public class IssueMilestoneEditActivity extends BasePagerActivity implements
         IssueMilestoneService service =
                 Gh4Application.get().getGitHubService(IssueMilestoneService.class);
         service.deleteMilestone(mRepoOwner, mRepoName, mMilestone.number())
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.deleting_msg, R.string.issue_error_delete_milestone))
                 .subscribe(result -> {
                     setResult(RESULT_OK);
@@ -358,7 +359,7 @@ public class IssueMilestoneEditActivity extends BasePagerActivity implements
                 .build();
 
         service.editMilestone(mRepoOwner, mRepoName, mMilestone.id(), request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, dialogMessageResId, errorMessage))
                 .subscribe(result -> {
                     mMilestone = result;

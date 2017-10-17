@@ -38,6 +38,7 @@ import com.gh4a.activities.RepositoryActivity;
 import com.gh4a.activities.UserActivity;
 import com.gh4a.activities.WatcherListActivity;
 import com.gh4a.activities.WikiListActivity;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.HtmlUtils;
 import com.gh4a.utils.HttpImageGetter;
 import com.gh4a.utils.RxUtils;
@@ -348,7 +349,7 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
                 RepositoryContentService.class, "application/vnd.github.v3.html", null, null);
 
         service.getReadmeHtml(repoOwner, repoName, mRef)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.mapFailureToValue(HttpURLConnection.HTTP_NOT_FOUND, null))
                 .map(html -> {
                     if (html != null) {
@@ -382,7 +383,7 @@ public class RepositoryFragment extends LoadingFragmentBase implements OnClickLi
                 mRepository.owner().login(), mRepository.name());
 
         service.searchIssues(query, null, null, 0)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .map(page -> page.totalCount())
                 .compose(RxUtils::doInBackground)
                 .toObservable()

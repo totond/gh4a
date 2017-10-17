@@ -23,6 +23,7 @@ import android.view.View;
 
 import com.gh4a.R;
 import com.gh4a.adapter.RootAdapter;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.Page;
 import com.philosophicalhacker.lib.RxLoader;
@@ -92,7 +93,7 @@ public abstract class PagedDataBaseFragment<T> extends LoadingListFragmentBase i
     private void load(boolean force) {
         mPageSubject
                 .concatMap(page -> loadPage(page)
-                        .compose(RxUtils::throwOnFailure)
+                        .map(ApiHelpers::throwOnFailure)
                         .compose(RxUtils::doInBackground)
                         .map(result -> {
                             final List<T> items;

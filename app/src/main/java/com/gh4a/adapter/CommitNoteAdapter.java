@@ -219,7 +219,7 @@ public class CommitNoteAdapter extends RootAdapter<GitComment, CommitNoteAdapter
         ReactionService service = Gh4Application.get().getGitHubService(ReactionService.class);
         ReactionRequest request = ReactionRequest.builder().content(content).build();
         return service.createCommitCommentReaction(mRepoOwner, mRepoName, comment.id(), request)
-                .compose(RxUtils::throwOnFailure);
+                .map(ApiHelpers::throwOnFailure);
     }
 
     @Override

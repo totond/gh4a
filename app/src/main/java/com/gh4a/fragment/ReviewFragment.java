@@ -90,7 +90,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
 
         Single<TimelineItem.TimelineReview> reviewItemSingle =
                 reviewService.getReview(mRepoOwner, mRepoName, mIssueNumber, mReview.id())
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .map(review -> new TimelineItem.TimelineReview(review));
 
         Single<List<ReviewComment>> reviewCommentsSingle = ApiHelpers.PageIterator
@@ -285,7 +285,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
         final Single<Response<Reaction>> responseSingle = comment instanceof ReviewComment
                 ? service.createPullRequestReviewCommentReaction(mRepoOwner, mRepoName, comment.id(), request)
                 : service.createIssueCommentReaction(mRepoOwner, mRepoName, comment.id(), request);
-        return responseSingle.compose(RxUtils::throwOnFailure);
+        return responseSingle.map(ApiHelpers::throwOnFailure);
     }
 
     private void handleDeleteComment(GitHubCommentBase comment) {
@@ -301,7 +301,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
         }
 
         responseSingle
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.deleting_msg, R.string.error_delete_comment))
                 .subscribe(result -> reloadComments(false), error -> {});

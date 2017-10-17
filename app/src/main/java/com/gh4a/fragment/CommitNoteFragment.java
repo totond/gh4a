@@ -284,7 +284,7 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
         CreateCommitComment request = CreateCommitComment.builder().body(comment).build();
         return service.createCommitComment(mRepoOwner, mRepoName, mObjectSha, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .map(response -> response);
     }
 
@@ -303,7 +303,7 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
         RepositoryCommentService service =
                 Gh4Application.get().getGitHubService(RepositoryCommentService.class);
         service.deleteCommitComment(mRepoOwner, mRepoName, id)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.deleting_msg, R.string.error_delete_comment))
                 .subscribe(result -> refreshComments(), error -> {});

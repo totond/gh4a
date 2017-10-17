@@ -599,7 +599,7 @@ public class IssueEditActivity extends BasePagerActivity implements
                 ? service.editIssue(mRepoOwner, mRepoName, issueNumber, builder.build())
                 : service.createIssue(mRepoOwner, mRepoName, builder.build());
 
-        single.compose(RxUtils::throwOnFailure)
+        single.map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.saving_msg, errorMessage))
                 .subscribe(result -> {
                     Intent data = new Intent();
@@ -651,7 +651,7 @@ public class IssueEditActivity extends BasePagerActivity implements
                     app.getGitHubService(RepositoryCollaboratorService.class);
             // TODO: consider moving to a shared place - shared with IssueListActivity
             observable = service.isUserCollaborator(mRepoOwner, mRepoName, login)
-                    .compose(RxUtils::throwOnFailure)
+                    .map(ApiHelpers::throwOnFailure)
                     .compose(RxUtils::doInBackground)
                     // the API returns 403 if the user doesn't have push access,
                     // which in turn means he isn't a collaborator
@@ -724,7 +724,7 @@ public class IssueEditActivity extends BasePagerActivity implements
                         return Single.just(null);
                     }
                     return service.getContents(mRepoOwner, mRepoName, c.path(), null)
-                            .compose(RxUtils::throwOnFailure)
+                            .map(ApiHelpers::throwOnFailure)
                             .compose(RxUtils::doInBackground);
                 })
                 .map(c -> c != null ? StringUtils.fromBase64(c.content()) : null)

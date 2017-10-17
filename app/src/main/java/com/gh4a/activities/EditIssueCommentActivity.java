@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.annotation.AttrRes;
 
 import com.gh4a.Gh4Application;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.GitHubCommentBase;
 import com.meisolsson.githubsdk.model.request.CommentRequest;
@@ -30,7 +31,7 @@ public class EditIssueCommentActivity extends EditCommentActivity {
                 Gh4Application.get().getGitHubService(IssueCommentService.class);
         CommentRequest request = CommentRequest.builder().body(body).build();
         return service.createIssueComment(repoOwner, repoName, issueNumber, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .map(response -> response);
     }
 
@@ -41,7 +42,7 @@ public class EditIssueCommentActivity extends EditCommentActivity {
                 Gh4Application.get().getGitHubService(IssueCommentService.class);
         CommentRequest request = CommentRequest.builder().body(body).build();
         return service.editIssueComment(repoOwner, repoName, commentId, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .map(response -> response);
     }
 }

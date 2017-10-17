@@ -417,7 +417,7 @@ public class UserFragment extends LoadingFragmentBase implements View.OnClickLis
         Single<Response<Boolean>> responseSingle = mIsFollowing
                 ? service.unfollowUser(mUserLogin)
                 : service.followUser(mUserLogin);
-        responseSingle.compose(RxUtils::throwOnFailure)
+        responseSingle.map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> {
                     mIsFollowing = !mIsFollowing;

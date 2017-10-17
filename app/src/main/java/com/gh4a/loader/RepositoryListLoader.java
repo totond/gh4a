@@ -48,7 +48,7 @@ public class RepositoryListLoader extends BaseLoader<Collection<Repository>> {
         }
 
         return observable
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .blockingGet()
                 .items();
     }

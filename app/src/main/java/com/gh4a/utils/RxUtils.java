@@ -31,10 +31,6 @@ import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
 
 public class RxUtils {
-    public static <T> Single<T> throwOnFailure(Single<Response<T>> upstream) {
-        return upstream.map(response -> ApiHelpers.throwOnFailure(response));
-    }
-
     public static <T> SingleTransformer<List<T>, List<T>> filter(Predicate<T> predicate) {
         return upstream -> upstream.map(list -> {
             if (list == null) {

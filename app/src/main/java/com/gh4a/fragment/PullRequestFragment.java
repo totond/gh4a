@@ -428,7 +428,7 @@ public class PullRequestFragment extends IssueFragmentBase {
                 .build();
 
         service.createGitReference(owner, repo, request)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.saving_msg, R.string.restore_branch_error))
                 .subscribe(result -> {
@@ -445,7 +445,7 @@ public class PullRequestFragment extends IssueFragmentBase {
         String repo = head.repo().name();
 
         service.deleteGitReference(owner, repo, head.ref())
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.deleting_msg, R.string.delete_branch_error))
                 .subscribe(result -> {

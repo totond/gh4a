@@ -30,6 +30,7 @@ import com.gh4a.R;
 import com.gh4a.activities.CommitActivity;
 import com.gh4a.adapter.CommitAdapter;
 import com.gh4a.adapter.RootAdapter;
+import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.model.Commit;
 import com.meisolsson.githubsdk.model.CommitCompare;
@@ -122,13 +123,13 @@ public class CommitCompareFragment extends ListDataBaseFragment<Commit> implemen
                 Gh4Application.get().getGitHubService(RepositoryCommitService.class);
 
         Single<CommitCompare> compareSingle = service.compareCommits(mRepoOwner, mRepoName, mBase, mHead)
-                .compose(RxUtils::throwOnFailure)
+                .map(ApiHelpers::throwOnFailure)
                 .onErrorResumeNext(error -> {
                     if (error instanceof ApiRequestException) {
                         if (((ApiRequestException) error).getStatus() == HttpURLConnection.HTTP_NOT_FOUND) {
                             // We got a 404; likely the history of the base branch was rewritten. Try the labels.
                             return service.compareCommits(mRepoOwner, mRepoName, mBaseLabel, mHeadLabel)
-                                    .compose(RxUtils::throwOnFailure);
+                                    .map(ApiHelpers::throwOnFailure);
                         }
                     }
                     return Single.error(error);
