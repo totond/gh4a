@@ -18,7 +18,6 @@ package com.gh4a.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -28,15 +27,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.gh4a.ApiRequestException;
-import com.gh4a.BackgroundTask;
 import com.gh4a.BaseActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
-import com.gh4a.loader.GistLoader;
-import com.gh4a.loader.GistStarLoader;
-import com.gh4a.loader.LoaderCallbacks;
-import com.gh4a.loader.LoaderResult;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.IntentUtils;
 import com.gh4a.utils.RxUtils;
@@ -45,6 +38,7 @@ import com.gh4a.utils.UiUtils;
 import com.meisolsson.githubsdk.model.Gist;
 import com.meisolsson.githubsdk.model.GistFile;
 import com.meisolsson.githubsdk.service.gists.GistService;
+import com.philosophicalhacker.lib.RxLoader;
 
 import java.util.Map;
 
@@ -57,34 +51,13 @@ public class GistActivity extends BaseActivity implements View.OnClickListener {
                 .putExtra("id", gistId);
     }
 
+    private static final int ID_LOADER_GIST = 0;
+    private static final int ID_LOADER_STARRED = 1;
+
     private String mGistId;
     private Gist mGist;
     private Boolean mIsStarred;
-
-    private final LoaderCallbacks<Gist> mGistCallback = new LoaderCallbacks<Gist>(this) {
-        @Override
-        protected Loader<LoaderResult<Gist>> onCreateLoader() {
-            return new GistLoader(GistActivity.this, mGistId);
-        }
-        @Override
-        protected void onResultReady(Gist result) {
-            fillData(result);
-            setContentShown(true);
-            supportInvalidateOptionsMenu();
-        }
-    };
-
-    private final LoaderCallbacks<Boolean> mStarCallback = new LoaderCallbacks<Boolean>(this) {
-        @Override
-        protected Loader<LoaderResult<Boolean>> onCreateLoader() {
-            return new GistStarLoader(GistActivity.this, mGistId);
-        }
-        @Override
-        protected void onResultReady(Boolean result) {
-            mIsStarred = result;
-            supportInvalidateOptionsMenu();
-        }
-    };
+    private RxLoader mRxLoader;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -93,12 +66,14 @@ public class GistActivity extends BaseActivity implements View.OnClickListener {
         setContentView(R.layout.gist);
         setContentShown(false);
 
+        mRxLoader = new RxLoader(this, getSupportLoaderManager());
+
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(getString(R.string.gist_title, mGistId));
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        getSupportLoaderManager().initLoader(0, null, mGistCallback);
-        getSupportLoaderManager().initLoader(1, null, mStarCallback);
+        loadGist(false);
+        loadStarredState(false);
     }
 
     @Override
@@ -109,10 +84,11 @@ public class GistActivity extends BaseActivity implements View.OnClickListener {
 
     @Override
     public void onRefresh() {
-        forceLoaderReload(0, 1);
         mGist = null;
         mIsStarred = null;
         setContentShown(false);
+        loadGist(true);
+        loadStarredState(true);
         super.onRefresh();
     }
 
@@ -229,5 +205,34 @@ public class GistActivity extends BaseActivity implements View.OnClickListener {
                     mIsStarred = !mIsStarred;
                     supportInvalidateOptionsMenu();
                 }, error -> supportInvalidateOptionsMenu());
+    }
+
+    private void loadGist(boolean force) {
+        GistService service = Gh4Application.get().getGitHubService(GistService.class);
+        service.getGist(mGistId)
+                .map(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::doInBackground)
+                .compose(this::handleError)
+                .toObservable()
+                .compose(mRxLoader.makeObservableTransformer(ID_LOADER_GIST, force))
+                .subscribe(result -> {
+                    fillData(result);
+                    setContentShown(true);
+                    supportInvalidateOptionsMenu();
+                }, error -> {});
+    }
+
+    private void loadStarredState(boolean force) {
+        GistService service = Gh4Application.get().getGitHubService(GistService.class);
+        service.checkIfGistIsStarred(mGistId)
+                .map(ApiHelpers::throwOnFailure)
+                .compose(RxUtils::doInBackground)
+                .compose(this::handleError)
+                .toObservable()
+                .compose(mRxLoader.makeObservableTransformer(ID_LOADER_STARRED, force))
+                .subscribe(result -> {
+                    mIsStarred = result;
+                    supportInvalidateOptionsMenu();
+                }, error -> {});
     }
 }
