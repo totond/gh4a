@@ -33,7 +33,6 @@ import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.StringUtils;
 import com.meisolsson.githubsdk.model.GistFile;
 import com.meisolsson.githubsdk.service.gists.GistService;
-import com.philosophicalhacker.lib.RxLoader;
 
 public class GistViewerActivity extends WebViewerActivity {
     public static Intent makeIntent(Context context, String id, String fileName) {
@@ -48,7 +47,6 @@ public class GistViewerActivity extends WebViewerActivity {
     private String mGistId;
     private GistFile mGistFile;
     private String mGistOwner;
-    private RxLoader mRxLoader;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,7 +56,6 @@ public class GistViewerActivity extends WebViewerActivity {
         actionBar.setTitle(mFileName);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        mRxLoader = new RxLoader(this, getSupportLoaderManager());
         loadGist(false);
     }
 
@@ -130,10 +127,8 @@ public class GistViewerActivity extends WebViewerActivity {
         GistService service = Gh4Application.get().getGitHubService(GistService.class);
         service.getGist(mGistId)
                 .map(ApiHelpers::throwOnFailure)
-                .compose(RxUtils::doInBackground)
-                .compose(this::handleError)
                 .toObservable()
-                .compose(mRxLoader.makeObservableTransformer(ID_LOADER_GIST, force))
+                .compose(makeLoaderObservable(ID_LOADER_GIST, force))
                 .subscribe(result -> {
                     mGistOwner = ApiHelpers.getUserLogin(GistViewerActivity.this, result.owner());
                     mGistFile = result.files().get(mFileName);

@@ -65,18 +65,24 @@ import com.gh4a.activities.SearchActivity;
 import com.gh4a.activities.home.HomeActivity;
 import com.gh4a.fragment.SettingsFragment;
 import com.gh4a.loader.LoaderCallbacks;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.SwipeRefreshLayout;
 import com.gh4a.widget.ToggleableAppBarLayoutBehavior;
 import com.meisolsson.githubsdk.model.ClientErrorResponse;
+import com.philosophicalhacker.lib.RxLoader;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import fr.castorflex.android.smoothprogressbar.SmoothProgressBar;
+import io.reactivex.Observable;
+import io.reactivex.ObservableTransformer;
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public abstract class BaseActivity extends AppCompatActivity implements
         SwipeRefreshLayout.OnRefreshListener,
@@ -113,6 +119,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
     private Animator mHeaderTransition;
     private final Handler mHandler = new Handler();
 
+    private RxLoader mRxLoader;
     private final CompositeDisposable mDisposeOnStop = new CompositeDisposable();
 
     private final Runnable mUpdateTaskDescriptionRunnable = new Runnable() {
@@ -128,6 +135,8 @@ public abstract class BaseActivity extends AppCompatActivity implements
         setTheme(Gh4Application.THEME);
         onInitExtras(getIntent().getExtras());
         super.onCreate(savedInstanceState);
+
+        mRxLoader = new RxLoader(this, getSupportLoaderManager());
 
         super.setContentView(R.layout.base_activity);
 
@@ -153,7 +162,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
                 .show();
     }
 
-    public void handleLoadFailure(Exception e) {
+    public void handleLoadFailure(Throwable e) {
         setErrorViewVisibility(true, e);
     }
 
@@ -546,8 +555,13 @@ public abstract class BaseActivity extends AppCompatActivity implements
         return reloadedAny;
     }
 
-    public <T> Single<T> handleError(Single<T> upstream) {
-        return upstream.doOnError(error -> setErrorViewVisibility(true, error));
+    protected <T> ObservableTransformer<T, T> makeLoaderObservable(int id, boolean force) {
+        return upstream -> upstream
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnError(error -> setErrorViewVisibility(true, error))
+                .compose(mRxLoader.makeObservableTransformer(id, force));
+
     }
 
     protected void setErrorViewVisibility(boolean visible, Throwable e) {
