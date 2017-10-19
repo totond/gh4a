@@ -261,7 +261,7 @@ public class IssueLabelListActivity extends BaseActivity implements
                 .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.deleting_msg, errorMessage))
                 .subscribe(result -> {
-                    forceLoaderReload(0);
+                    loadLabels(true);
                     setResult(RESULT_OK);
                 }, error -> {});
     }
@@ -279,7 +279,7 @@ public class IssueLabelListActivity extends BaseActivity implements
                 .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.saving_msg, errorMessage))
                 .subscribe(result -> {
-                    forceLoaderReload(0);
+                    loadLabels(true);
                     setResult(RESULT_OK);
                 }, error -> {});
     }
@@ -297,7 +297,7 @@ public class IssueLabelListActivity extends BaseActivity implements
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.saving_msg, errorMessage))
                 .subscribe(result -> {
                     mAddedLabel = null;
-                    forceLoaderReload(0);
+                    loadLabels(true);
                     setResult(RESULT_OK);
                 }, error -> {});
     }

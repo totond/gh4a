@@ -21,7 +21,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 
 import com.gh4a.R;
-import com.gh4a.holder.Feed;
+import com.gh4a.model.Feed;
 
 public class BlogActivity extends WebViewerActivity {
     public static Intent makeIntent(Context context, Feed blog) {
