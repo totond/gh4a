@@ -125,6 +125,7 @@ public class HomeActivity extends BaseFragmentPagerActivity implements
 
         loadUserInfo(false);
         loadNotificationIndicator(false);
+        mFactory.onStartLoadingData();
     }
 
     private void updateNotificationIndicator(int checkedItemId) {
@@ -510,6 +511,7 @@ public class HomeActivity extends BaseFragmentPagerActivity implements
         mFactory = factory;
         mSelectedFactoryId = itemId;
         mFactory.setUserInfo(mUserInfo);
+        mFactory.onStartLoadingData();
 
         getPrefs().edit()
                 .putString("last_selected_home_page", START_PAGE_MAPPING.get(mSelectedFactoryId))
