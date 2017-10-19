@@ -69,6 +69,7 @@ import com.gh4a.widget.ToggleableAppBarLayoutBehavior;
 import com.meisolsson.githubsdk.model.ClientErrorResponse;
 import com.philosophicalhacker.lib.RxLoader;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,20 +144,14 @@ public abstract class BaseActivity extends AppCompatActivity implements
         setupHeaderDrawable();
     }
 
-    public void handleAuthFailureDuringLoad() {
-        Gh4Application.get().logout();
-        Snackbar.make(mCoordinatorLayout, R.string.load_auth_failure_notice, Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.login, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        goToToplevelActivity();
-                    }
-                })
-                .show();
-    }
-
     public void handleLoadFailure(Throwable e) {
-        // FIXME: handle auth error by integrating handleAuthFailureDuringLoad
+        boolean isAuthError = e instanceof ApiRequestException
+                && ((ApiRequestException) e).getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED;
+        if (isAuthError) {
+            Snackbar.make(mCoordinatorLayout, R.string.load_auth_failure_notice, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.login, v -> goToToplevelActivity())
+                    .show();
+        }
         Log.d(Gh4Application.LOG_TAG, "Loading data failed", e);
         setErrorViewVisibility(true, e);
     }
