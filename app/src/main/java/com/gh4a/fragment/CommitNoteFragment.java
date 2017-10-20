@@ -117,13 +117,10 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         getBaseActivity().addAppBarOffsetListener(mBottomSheet);
-        mBottomSheet.post(new Runnable() {
-            @Override
-            public void run() {
-                // Fix an issue where the bottom sheet is initially located outside of the visible
-                // screen area
-                mBottomSheet.resetPeekHeight(getBaseActivity().getAppBarTotalScrollRange());
-            }
+        mBottomSheet.post(() -> {
+            // Fix an issue where the bottom sheet is initially located outside of the visible
+            // screen area
+            mBottomSheet.resetPeekHeight(getBaseActivity().getAppBarTotalScrollRange());
         });
     }
 

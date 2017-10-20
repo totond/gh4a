@@ -121,6 +121,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
     private RxLoader mRxLoader;
     private final CompositeDisposable mDisposeOnStop = new CompositeDisposable();
 
+    @SuppressWarnings("Convert2Lambda") // lambda wouldn't allow TargetApi annotation
     private final Runnable mUpdateTaskDescriptionRunnable = new Runnable() {
         @TargetApi(21)
         @Override
@@ -279,13 +280,10 @@ public abstract class BaseActivity extends AppCompatActivity implements
         progressAnimator2.setEvaluator(new ArgbEvaluator());
         animators.add(progressAnimator2);
 
-        progressAnimator1.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mProgressColors[0] = (int) progressAnimator1.getAnimatedValue();
-                mProgressColors[1] = (int) progressAnimator2.getAnimatedValue();
-                mProgress.invalidate();
-            }
+        progressAnimator1.addUpdateListener(anim -> {
+            mProgressColors[0] = (int) progressAnimator1.getAnimatedValue();
+            mProgressColors[1] = (int) progressAnimator2.getAnimatedValue();
+            mProgress.invalidate();
         });
 
         cancelHeaderTransition();
@@ -501,14 +499,8 @@ public abstract class BaseActivity extends AppCompatActivity implements
             mPendingPermissionCb = cb;
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
                 Snackbar.make(getRootLayout(), rationaleTextResId, Snackbar.LENGTH_INDEFINITE)
-                        .setAction(R.string.ok, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                ActivityCompat.requestPermissions(BaseActivity.this,
-                                        new String[] { permission }, 0);
-
-                            }
-                        })
+                        .setAction(R.string.ok, v -> ActivityCompat.requestPermissions(
+                                BaseActivity.this, new String[] { permission }, 0))
                         .show();
             } else {
                 ActivityCompat.requestPermissions(this, new String[] { permission }, 0);
@@ -536,7 +528,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
         return upstream -> upstream
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(error -> handleLoadFailure(error))
+                .doOnError(this::handleLoadFailure)
                 .compose(mRxLoader.makeSingleTransformer(id, force));
     }
 
@@ -557,12 +549,9 @@ public abstract class BaseActivity extends AppCompatActivity implements
             ViewStub errorStub = findViewById(R.id.error_stub);
             error = errorStub.inflate();
 
-            error.findViewById(R.id.retry_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    setErrorViewVisibility(false, null);
-                    onRefresh();
-                }
+            error.findViewById(R.id.retry_button).setOnClickListener(v -> {
+                setErrorViewVisibility(false, null);
+                onRefresh();
             });
         }
 
@@ -699,13 +688,10 @@ public abstract class BaseActivity extends AppCompatActivity implements
             }
 
             toolBar.setNavigationIcon(new DrawerArrowDrawable(toolBar.getContext()));
-            toolBar.setNavigationOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick (View v) {
-                    int drawerLockMode = mDrawerLayout.getDrawerLockMode(GravityCompat.START);
-                    if (drawerLockMode != DrawerLayout.LOCK_MODE_LOCKED_CLOSED) {
-                        mDrawerLayout.openDrawer(GravityCompat.START);
-                    }
+            toolBar.setNavigationOnClickListener(v -> {
+                int drawerLockMode = mDrawerLayout.getDrawerLockMode(GravityCompat.START);
+                if (drawerLockMode != DrawerLayout.LOCK_MODE_LOCKED_CLOSED) {
+                    mDrawerLayout.openDrawer(GravityCompat.START);
                 }
             });
 
