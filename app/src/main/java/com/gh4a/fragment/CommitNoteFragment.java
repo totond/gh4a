@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.gh4a.BaseActivity;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
 import com.gh4a.activities.EditCommitCommentActivity;
@@ -119,7 +120,10 @@ public class CommitNoteFragment extends ListDataBaseFragment<GitComment> impleme
         mBottomSheet.post(() -> {
             // Fix an issue where the bottom sheet is initially located outside of the visible
             // screen area
-            mBottomSheet.resetPeekHeight(getBaseActivity().getAppBarTotalScrollRange());
+            BaseActivity activity = getBaseActivity();
+            if (activity != null) {
+                mBottomSheet.resetPeekHeight(activity.getAppBarTotalScrollRange());
+            }
         });
     }
 
