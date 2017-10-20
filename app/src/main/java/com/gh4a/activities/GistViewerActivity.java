@@ -29,7 +29,6 @@ import com.gh4a.R;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.FileUtils;
 import com.gh4a.utils.IntentUtils;
-import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.StringUtils;
 import com.meisolsson.githubsdk.model.GistFile;
 import com.meisolsson.githubsdk.service.gists.GistService;
