@@ -63,6 +63,7 @@ import com.gh4a.activities.Github4AndroidActivity;
 import com.gh4a.activities.SearchActivity;
 import com.gh4a.activities.home.HomeActivity;
 import com.gh4a.fragment.SettingsFragment;
+import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.UiUtils;
 import com.gh4a.widget.SwipeRefreshLayout;
 import com.gh4a.widget.ToggleableAppBarLayoutBehavior;
@@ -526,8 +527,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
 
     public <T> SingleTransformer<T, T> makeLoaderSingle(int id, boolean force) {
         return upstream -> upstream
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .compose(RxUtils::doInBackground)
                 .doOnError(this::handleLoadFailure)
                 .compose(mRxLoader.makeSingleTransformer(id, force));
     }
