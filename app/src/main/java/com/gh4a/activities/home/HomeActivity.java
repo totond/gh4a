@@ -535,7 +535,7 @@ public class HomeActivity extends BaseFragmentPagerActivity implements
                     mUserInfo = result;
                     updateUserInfo();
                 }, error -> {});
-    };
+    }
 
     private void loadNotificationIndicator(boolean force) {
         NotificationService service = ServiceFactory.createService(

@@ -112,7 +112,7 @@ public class RxUtils {
         return upstream -> upstream
                 .compose(RxUtils::doInBackground)
                 .compose(wrapWithProgressDialog(activity, dialogMessageResId))
-                .compose(wrapWithRetrySnackbar(activity, rootLayout, errorMessage));
+                .compose(wrapWithRetrySnackbar(rootLayout, errorMessage));
     }
 
     public static <T> SingleTransformer<T, T> wrapWithProgressDialog(final FragmentActivity activity,
@@ -145,7 +145,7 @@ public class RxUtils {
         };
     }
 
-    public static <T> SingleTransformer<T, T> wrapWithRetrySnackbar(final FragmentActivity activity,
+    public static <T> SingleTransformer<T, T> wrapWithRetrySnackbar(
             final CoordinatorLayout rootLayout, final String errorMessage) {
         return new SingleTransformer<T, T>() {
             private final PublishProcessor<Integer> mRetryProcessor = PublishProcessor.create();
@@ -171,7 +171,7 @@ public class RxUtils {
             }
             return Response.error(response.errorBody(), response.raw());
         });
-    };
+    }
 
     public static class ProgressDialogFragment extends DialogFragment {
         @android.support.annotation.NonNull
