@@ -104,7 +104,7 @@ public class IssueFragment extends IssueFragmentBase {
     }
 
     @Override
-    protected Single<Response<Boolean>> doDeleteComment(GitHubCommentBase comment) {
+    protected Single<Response<Void>> doDeleteComment(GitHubCommentBase comment) {
         IssueCommentService service =
                 Gh4Application.get().getGitHubService(IssueCommentService.class);
         return service.deleteIssueComment(mRepoOwner, mRepoName, comment.id());

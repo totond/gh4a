@@ -426,7 +426,7 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
     protected abstract Single<List<C>> createCommentSingle();
     protected abstract void openCommentDialog(long id, long replyToId, String line,
             int position, int leftLine, int rightLine, PositionalCommentBase commitComment);
-    protected abstract Single<Response<Boolean>> doDeleteComment(long id);
+    protected abstract Single<Response<Void>> doDeleteComment(long id);
     protected abstract boolean canReply();
     protected abstract String createUrl(String lineId, long replyId);
     protected abstract PositionalCommentBase onUpdateReactions(PositionalCommentBase comment,
@@ -526,7 +526,7 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
 
     private void deleteComment(long id) {
         doDeleteComment(id)
-                .map(ApiHelpers::throwOnFailure)
+                .map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.deleting_msg,
                         getString(R.string.error_delete_commit_comment)))
                 .subscribe(result -> refresh(), error -> {});

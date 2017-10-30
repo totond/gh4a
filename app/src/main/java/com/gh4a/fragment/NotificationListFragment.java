@@ -257,7 +257,7 @@ public class NotificationListFragment extends LoadingListFragmentBase implements
     private void markAsRead(Repository repository, NotificationThread notification) {
         NotificationService service =
                 Gh4Application.get().getGitHubService(NotificationService.class);
-        final Single<Response<Boolean>> responseSingle;
+        final Single<Response<Void>> responseSingle;
         if (notification != null) {
             responseSingle = service.markNotificationRead(notification.id());
         } else {
@@ -272,7 +272,7 @@ public class NotificationListFragment extends LoadingListFragmentBase implements
             }
         }
 
-        responseSingle.map(ApiHelpers::throwOnFailure)
+        responseSingle.map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> handleMarkAsRead(repository, notification), error -> {});
     }

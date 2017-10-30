@@ -563,11 +563,11 @@ public abstract class IssueFragmentBase extends ListDataBaseFragment<TimelineIte
 
     protected abstract void bindSpecialViews(View headerView);
     protected abstract void assignHighlightColor();
-    protected abstract Single<Response<Boolean>> doDeleteComment(GitHubCommentBase comment);
+    protected abstract Single<Response<Void>> doDeleteComment(GitHubCommentBase comment);
 
     private void handleDeleteComment(GitHubCommentBase comment) {
         doDeleteComment(comment)
-                .map(ApiHelpers::throwOnFailure)
+                .map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.deleting_msg, R.string.error_delete_comment))
                 .subscribe(result -> {

@@ -292,7 +292,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
     }
 
     private void handleDeleteComment(GitHubCommentBase comment) {
-        final Single<Response<Boolean>> responseSingle;
+        final Single<Response<Void>> responseSingle;
         if (comment instanceof ReviewComment) {
             PullRequestReviewCommentService service =
                     Gh4Application.get().getGitHubService(PullRequestReviewCommentService.class);
@@ -304,7 +304,7 @@ public class ReviewFragment extends ListDataBaseFragment<TimelineItem>
         }
 
         responseSingle
-                .map(ApiHelpers::throwOnFailure)
+                .map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(getBaseActivity(),
                         R.string.deleting_msg, R.string.error_delete_comment))
                 .subscribe(result -> reloadComments(false), error -> {});

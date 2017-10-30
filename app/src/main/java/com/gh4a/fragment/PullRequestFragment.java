@@ -339,7 +339,7 @@ public class PullRequestFragment extends IssueFragmentBase {
 
 
     @Override
-    protected Single<Response<Boolean>> doDeleteComment(GitHubCommentBase comment) {
+    protected Single<Response<Void>> doDeleteComment(GitHubCommentBase comment) {
         if (comment instanceof ReviewComment) {
             PullRequestReviewCommentService service =
                     Gh4Application.get().getGitHubService(PullRequestReviewCommentService.class);

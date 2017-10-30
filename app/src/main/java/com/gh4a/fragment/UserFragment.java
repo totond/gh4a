@@ -50,7 +50,6 @@ import com.meisolsson.githubsdk.service.repositories.RepositoryService;
 import com.meisolsson.githubsdk.service.users.UserFollowerService;
 import com.meisolsson.githubsdk.service.users.UserService;
 
-import java.net.HttpURLConnection;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -381,10 +380,10 @@ public class UserFragment extends LoadingFragmentBase implements View.OnClickLis
     private void toggleFollowingState() {
         UserFollowerService service =
                 Gh4Application.get().getGitHubService(UserFollowerService.class);
-        Single<Response<Boolean>> responseSingle = mIsFollowing
+        Single<Response<Void>> responseSingle = mIsFollowing
                 ? service.unfollowUser(mUserLogin)
                 : service.followUser(mUserLogin);
-        responseSingle.map(ApiHelpers::throwOnFailure)
+        responseSingle.map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> {
                     mIsFollowing = !mIsFollowing;
@@ -447,8 +446,7 @@ public class UserFragment extends LoadingFragmentBase implements View.OnClickLis
         UserFollowerService service =
                 Gh4Application.get().getGitHubService(UserFollowerService.class);
         mIsFollowingSubscription = service.isFollowing(mUserLogin)
-                .map(ApiHelpers::throwOnFailure)
-                .compose(RxUtils.mapFailureToValue(HttpURLConnection.HTTP_NOT_FOUND, false))
+                .map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(makeLoaderSingle(ID_LOADER_IS_FOLLOWING, force))
                 .subscribe(result -> {
                     mIsFollowing = result;

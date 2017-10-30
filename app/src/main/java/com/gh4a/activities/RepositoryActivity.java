@@ -440,10 +440,10 @@ public class RepositoryActivity extends BaseFragmentPagerActivity {
 
     private void toggleStarringState() {
         StarringService service = Gh4Application.get().getGitHubService(StarringService.class);
-        Single<Response<Boolean>> responseSingle = mIsStarring
+        Single<Response<Void>> responseSingle = mIsStarring
                 ? service.unstarRepository(mRepoOwner, mRepoName)
                 : service.starRepository(mRepoOwner, mRepoName);
-        responseSingle.map(ApiHelpers::throwOnFailure)
+        responseSingle.map(ApiHelpers::mapToBooleanOrThrowOnFailure)
                 .compose(RxUtils::doInBackground)
                 .subscribe(result -> {
                     if (mIsStarring != null) {
