@@ -39,6 +39,7 @@ import com.meisolsson.githubsdk.model.Gist;
 import com.meisolsson.githubsdk.model.GistFile;
 import com.meisolsson.githubsdk.service.gists.GistService;
 
+import java.net.HttpURLConnection;
 import java.util.Map;
 
 import io.reactivex.Single;
@@ -219,6 +220,10 @@ public class GistActivity extends BaseActivity implements View.OnClickListener {
         GistService service = Gh4Application.get().getGitHubService(GistService.class);
         service.checkIfGistIsStarred(mGistId)
                 .map(ApiHelpers::throwOnFailure)
+                // 404 means 'not starred'
+                .compose(RxUtils.mapFailureToValue(HttpURLConnection.HTTP_NOT_FOUND, false))
+                // success means 'starred'
+                .map(result -> true)
                 .compose(makeLoaderSingle(ID_LOADER_STARRED, force))
                 .subscribe(result -> {
                     mIsStarred = result;
