@@ -149,7 +149,7 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
         actionBar.setSubtitle(mRepoOwner + "/" + mRepoName);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        loadComments(false, false);
+        loadComments(true, false);
     }
 
     @Override
@@ -182,10 +182,8 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
 
     @Override
     public void onRefresh() {
-        if (loadComments(true, true)) {
-            mCommitCommentsByPos.clear();
-            setContentShown(false);
-        }
+        setContentShown(false);
+        loadComments(true, true);
         super.onRefresh();
     }
 
@@ -378,6 +376,7 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
     }
 
     private void addCommentsToMap(List<C> comments) {
+        mCommitCommentsByPos.clear();
         for (PositionalCommentBase comment : comments) {
             if (!TextUtils.equals(comment.path(), mPath)) {
                 continue;
@@ -413,8 +412,13 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
     }
 
     private void refresh() {
+        // Make sure we load the comments from remote, as we now know they've changed
+        getIntent().removeExtra("comments");
+
+        // Make sure our callers are aware of the change
+        setResult(RESULT_OK);
+
         mCommitComments.clear();
-        mCommitCommentsByPos.clear();
         loadComments(false, true);
         setContentShown(false);
     }
@@ -525,27 +529,19 @@ public abstract class DiffViewerActivity<C extends PositionalCommentBase> extend
                 .map(ApiHelpers::throwOnFailure)
                 .compose(RxUtils.wrapForBackgroundTask(this, R.string.deleting_msg,
                         getString(R.string.error_delete_commit_comment)))
-                .subscribe(result -> {
-                    refresh();
-                    setResult(RESULT_OK);
-                }, error -> {});
+                .subscribe(result -> refresh(), error -> {});
     }
 
-    private boolean loadComments(boolean refreshOnly, boolean force) {
-        List<C> comments = getIntent().getParcelableArrayListExtra("comments");
-        if (comments != null && refreshOnly) {
-            return false;
-        }
-
-        Single<List<C>> commentSingle = comments != null
-                ? Single.just(comments)
+    private void loadComments(boolean useIntentExtraIfPresent, boolean force) {
+        List<C> intentComments = useIntentExtraIfPresent
+                ? getIntent().getParcelableArrayListExtra("comments") : null;
+        Single<List<C>> commentSingle = intentComments != null
+                ? Single.just(intentComments)
                 : createCommentSingle().compose(makeLoaderSingle(ID_LOADER_COMMENTS, force));
 
         commentSingle.subscribe(result -> {
-            addCommentsToMap(new ArrayList<>(result));
+            addCommentsToMap(result);
             onDataReady();
         }, error -> {});
-
-        return true;
     }
 }
