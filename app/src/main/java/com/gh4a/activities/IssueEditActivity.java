@@ -52,7 +52,6 @@ import com.gh4a.widget.MarkdownPreviewWebView;
 import com.meisolsson.githubsdk.model.Content;
 import com.meisolsson.githubsdk.model.ContentType;
 import com.meisolsson.githubsdk.model.Issue;
-import com.meisolsson.githubsdk.model.IssueState;
 import com.meisolsson.githubsdk.model.Label;
 import com.meisolsson.githubsdk.model.Milestone;
 import com.meisolsson.githubsdk.model.User;
@@ -636,11 +635,11 @@ public class IssueEditActivity extends BasePagerActivity implements
     private void loadMilestones() {
         final IssueMilestoneService service =
                 Gh4Application.get().getGitHubService(IssueMilestoneService.class);
+
         registerTemporarySubscription(ApiHelpers.PageIterator
-                .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, page))
+                .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, "open", page))
                 .compose(RxUtils::doInBackground)
                 .compose(RxUtils.wrapWithProgressDialog(this, R.string.loading_msg))
-                .compose(RxUtils.filter(m -> m.state() == IssueState.Open))
                 .subscribe(result -> {
                     mAllMilestone = result;
                     showMilestonesDialog();

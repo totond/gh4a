@@ -26,8 +26,6 @@ import com.gh4a.activities.IssueMilestoneEditActivity;
 import com.gh4a.adapter.MilestoneAdapter;
 import com.gh4a.adapter.RootAdapter;
 import com.gh4a.utils.ApiHelpers;
-import com.gh4a.utils.RxUtils;
-import com.meisolsson.githubsdk.model.IssueState;
 import com.meisolsson.githubsdk.model.Milestone;
 import com.meisolsson.githubsdk.service.issues.IssueMilestoneService;
 
@@ -93,11 +91,10 @@ public class IssueMilestoneListFragment extends ListDataBaseFragment<Milestone> 
     protected Single<List<Milestone>> onCreateDataSingle() {
         final IssueMilestoneService service =
                 Gh4Application.get().getGitHubService(IssueMilestoneService.class);
-        IssueState targetState = mShowClosed ? IssueState.Closed : IssueState.Open;
+        String state = mShowClosed ? "closed" : "open";
 
         return ApiHelpers.PageIterator
-                .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, page))
-                .compose(RxUtils.filter(m -> m.state() == targetState));
+                .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, state, page));
     }
 
     @Override

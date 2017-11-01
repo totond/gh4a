@@ -44,7 +44,6 @@ import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.SingleFactory;
 import com.gh4a.utils.UiUtils;
 import com.meisolsson.githubsdk.model.Issue;
-import com.meisolsson.githubsdk.model.IssueState;
 import com.meisolsson.githubsdk.model.Label;
 import com.meisolsson.githubsdk.model.Milestone;
 import com.meisolsson.githubsdk.model.User;
@@ -628,11 +627,11 @@ public class IssueListActivity extends BaseFragmentPagerActivity implements
         } else {
             final IssueMilestoneService service =
                     Gh4Application.get().getGitHubService(IssueMilestoneService.class);
+
             registerTemporarySubscription(ApiHelpers.PageIterator
-                    .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, page))
+                    .toSingle(page -> service.getRepositoryMilestones(mRepoOwner, mRepoName, "open", page))
                     .compose(RxUtils::doInBackground)
                     .compose(RxUtils.wrapWithProgressDialog(this, R.string.loading_msg))
-                    .compose(RxUtils.filter(m -> m.state() == IssueState.Open))
                     .subscribe(milestones -> {
                         mMilestones = milestones;
                         showMilestonesDialog();
