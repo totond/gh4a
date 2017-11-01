@@ -267,7 +267,7 @@ class ReviewViewHolder
                 break;
             case R.id.review_file_details: {
                 Review review = (Review) v.getTag();
-                long commentId = (long) v.getTag(R.id.review_comment_id);
+                Integer commentId = (Integer) v.getTag(R.id.review_comment_id);
                 mContext.startActivity(ReviewActivity.makeIntent(mContext, mRepoOwner, mRepoName,
                         mIssueNumber, review, new IntentUtils.InitialCommentMarker(commentId)));
                 break;
