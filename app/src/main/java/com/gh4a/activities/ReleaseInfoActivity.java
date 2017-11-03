@@ -141,6 +141,7 @@ public class ReleaseInfoActivity extends BaseActivity implements
             if (mBodySubscription != null) {
                 mBodySubscription.dispose();
             }
+            loadRelease(true);
         }
         super.onRefresh();
     }
