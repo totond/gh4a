@@ -7,7 +7,10 @@ import android.net.Uri;
 import android.support.annotation.AttrRes;
 import android.support.annotation.DrawableRes;
 import android.support.v7.widget.PopupMenu;
+import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.gh4a.R;
 import com.gh4a.activities.ReviewActivity;
@@ -220,7 +224,7 @@ class ReviewViewHolder
         return UiUtils.resolveDrawable(mContext, iconResAttr);
     }
 
-    private void formatTitle(Review review) {
+    private void formatTitle(final Review review) {
         int textResId;
         switch (review.getState()) {
             case Review.STATE_APPROVED:
@@ -240,10 +244,33 @@ class ReviewViewHolder
         }
 
         String login = review.getUser().getLogin();
+        String textBase = mContext.getString(textResId, login);
+        SpannableStringBuilder text = StringUtils.applyBoldTags(textBase,
+                mMessageView.getTypefaceValue());
+
         CharSequence time = review.getSubmittedAt() != null
                 ? StringUtils.formatRelativeTime(mContext, review.getSubmittedAt(), true) : "";
-        String rawMessage = mContext.getString(textResId, login, time);
-        StringUtils.applyBoldTagsAndSetText(mMessageView, rawMessage);
+
+        int pos = text.toString().indexOf("[time]");
+        if (pos >= 0) {
+            text.replace(pos, pos + 6, time);
+            if (review.getSubmittedAt() != null) {
+                text.setSpan(new ClickableSpan() {
+                    @Override
+                    public void updateDrawState(TextPaint ds) {
+                        // No special stying
+                    }
+
+                    @Override
+                    public void onClick(View widget) {
+                        CharSequence longTime = StringUtils.formatExactTime(mContext,
+                                review.getSubmittedAt());
+                        Toast.makeText(mContext, longTime, Toast.LENGTH_LONG).show();
+                    }
+                }, pos, pos + time.length(), 0);
+            }
+        }
+        mMessageView.setText(text);
     }
 
     @Override

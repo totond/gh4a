@@ -3,10 +3,13 @@ package com.gh4a.adapter.timeline;
 import android.content.Context;
 import android.content.Intent;
 import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.style.ClickableSpan;
 import android.text.style.TypefaceSpan;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.gh4a.R;
 import com.gh4a.activities.CommitActivity;
@@ -146,25 +149,17 @@ class EventViewHolder
                 String assigneeLogin = event.getAssignee() != null
                         ? event.getAssignee().getLogin() : null;
                 if (assigneeLogin != null && assigneeLogin.equals(actorLogin)) {
-                    if (isPullRequestEvent) {
-                        textResId = isAssign
+                    if (isAssign) {
+                        textResId = isPullRequestEvent
                                 ? R.string.pull_request_event_assigned_self
-                                : R.string.pull_request_event_unassigned_self;
+                                : R.string.issue_event_assigned_self;
                     } else {
-                        textResId = isAssign
-                                ? R.string.issue_event_assigned_self
-                                : R.string.issue_event_unassigned_self;
+                        textResId = R.string.issue_event_unassigned_self;
                     }
                 } else {
-                    if (isPullRequestEvent) {
-                        textResId = isAssign
-                                ? R.string.pull_request_event_assigned
-                                : R.string.pull_request_event_unassigned;
-                    } else {
-                        textResId = isAssign
-                                ? R.string.issue_event_assigned
-                                : R.string.issue_event_unassigned;
-                    }
+                    textResId = isAssign
+                            ? R.string.issue_event_assigned
+                            : R.string.issue_event_unassigned;
                     textBase = mContext.getString(textResId,
                             ApiHelpers.getUserLogin(mContext, user),
                             ApiHelpers.getUserLogin(mContext, event.getAssignee()));
@@ -178,26 +173,23 @@ class EventViewHolder
                 textResId = R.string.issue_event_unlabeled;
                 break;
             case IssueEvent.TYPE_LOCKED:
-                textResId = isPullRequestEvent
-                        ? R.string.pull_request_event_locked
-                        : R.string.issue_event_locked;
+                textResId = R.string.issue_event_locked;
                 break;
             case IssueEvent.TYPE_UNLOCKED:
-                textResId = isPullRequestEvent
-                        ? R.string.pull_request_event_unlocked
-                        : R.string.issue_event_unlocked;
+                textResId = R.string.issue_event_unlocked;
                 break;
             case IssueEvent.TYPE_MILESTONED:
             case IssueEvent.TYPE_DEMILESTONED:
                 textResId = TextUtils.equals(event.getEvent(), IssueEvent.TYPE_MILESTONED)
-                        ? R.string.issue_event_milestoned : R.string.issue_event_demilestoned;
-                textBase = mContext.getString(textResId, event.getMilestone().getTitle(),
-                        ApiHelpers.getUserLogin(mContext, user));
+                        ? R.string.issue_event_milestoned
+                        : R.string.issue_event_demilestoned;
+                textBase = mContext.getString(textResId, ApiHelpers.getUserLogin(mContext, user),
+                        event.getMilestone().getTitle());
                 break;
             case IssueEvent.TYPE_RENAMED: {
                 Rename rename = event.getRename();
                 textBase = mContext.getString(R.string.issue_event_renamed,
-                        rename.getFrom(), rename.getTo(), ApiHelpers.getUserLogin(mContext, user));
+                        ApiHelpers.getUserLogin(mContext, user), rename.getFrom(), rename.getTo());
                 break;
             }
             case IssueEvent.TYPE_HEAD_REF_DELETED:
@@ -247,6 +239,29 @@ class EventViewHolder
             int length = label.getName().length();
             text.replace(pos, pos + 7, label.getName());
             text.setSpan(new IssueLabelSpan(mContext, label, false), pos, pos + length, 0);
+        }
+
+        CharSequence time = event.getCreatedAt() != null
+                ? StringUtils.formatRelativeTime(mContext, event.getCreatedAt(), true) : "";
+
+        pos = text.toString().indexOf("[time]");
+        if (pos >= 0) {
+            text.replace(pos, pos + 6, time);
+            if (event.getCreatedAt() != null) {
+                text.setSpan(new ClickableSpan() {
+                    @Override
+                    public void updateDrawState(TextPaint ds) {
+                        // No special stying
+                    }
+
+                    @Override
+                    public void onClick(View widget) {
+                        CharSequence longTime = StringUtils.formatExactTime(mContext,
+                                event.getCreatedAt());
+                        Toast.makeText(mContext, longTime, Toast.LENGTH_LONG).show();
+                    }
+                }, pos, pos + time.length(), 0);
+            }
         }
 
         return text;
